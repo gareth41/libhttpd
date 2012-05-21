@@ -1,3 +1,6 @@
+#ifndef SESSION_H
+#define SESSION_H
+
 /*
 	libhttpd - a C library to aid serving and responding to HTTP requests
 
@@ -17,19 +20,23 @@
 	along with libxbee. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
+#include <sys/socket.h>
+#include <arpa/inet.h>
 
-#include "internal.h"
-#include "http.h"
+struct xfer_info {
+	struct buf *inBuf;
+	struct buf *outBuf;
+};
 
-hte http_read(struct session_info *session) {
-	return HTE_UNKNOWN;
-}
+struct session_info {
+	int fd;
+	struct sockaddr_in addrinfo;
+	socklen_t addrlen;
+	pthread_t tid;
+	struct httpd_info *httpd;
+	struct xfer_info *xfer;
+};
 
-hte http_parse(struct session_info *session) {
-	return HTE_UNKNOWN;
-}
+void *session_handleConnection(void *_session);
 
-hte http_respond(struct session_info *session) {
-	return HTE_UNKNOWN;
-}
+#endif /* SESSION_H */

@@ -20,6 +20,10 @@
 	along with libxbee. If not, see <http://www.gnu.org/licenses/>.
 */
 
-int test2(int a, int b);
+struct session_info;
+
+hte http_read(struct session_info *session);
+hte http_parse(struct session_info *session);
+hte http_respond(struct session_info *session);
 
 #endif /* HTTP_H */

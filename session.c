@@ -18,18 +18,35 @@
 */
 
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "internal.h"
+#include "session.h"
 #include "http.h"
 
-hte http_read(struct session_info *session) {
-	return HTE_UNKNOWN;
-}
+void *session_handleConnection(void *_session) {
+	struct session_info *session = _session;
+	struct httpd_info *httpd;
+	hte ret = HTE_NONE;
 
-hte http_parse(struct session_info *session) {
-	return HTE_UNKNOWN;
-}
-
-hte http_respond(struct session_info *session) {
-	return HTE_UNKNOWN;
+	if (!session || !session->httpd) return (void*)-1;
+	
+	httpd = session->httpd;
+	
+	if (http_read(session) != 0) { ret = HTE_READ; goto die; }
+	
+	if (http_parse(session) != 0) { ret = HTE_PARSE; goto die; }
+	
+	httpd->callback(httpd->rxid++, session->xfer);
+	
+	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
+	
+	goto done;
+die:
+	
+	/* some sort of 'an-error-occured' callback? check ret! */
+	
+done:
+	free(_session);
+	return NULL;
 }

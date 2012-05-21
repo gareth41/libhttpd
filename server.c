@@ -31,65 +31,70 @@
 
 #include "internal.h"
 #include "server.h"
+#include "session.h"
 
-int srv_listenStart(struct httpd_info *info) {
+int srv_listenStart(struct httpd_info *httpd) {
 	hte ret = HTE_NONE;
 	int i;
 	struct sockaddr_in addrinfo;
 	
-	if (!info) return HTE_INVALPARAM;
+	if (!httpd) return HTE_INVALPARAM;
 	
-	if (info->listenPort < 1 || info->listenPort > 65535) return HTE_INVALPARAM;
+	if (httpd->listenPort < 1 || httpd->listenPort > 65535) return HTE_INVALPARAM;
 	
 	/* get some memory */
-	if (!info->listen) {
-		if ((info->listen = malloc(sizeof(*info->listen))) == NULL) { ret = HTE_NOMEM; goto die; }
-		info->listen->fd = -1;
+	if (!httpd->listen) {
+		if ((httpd->listen = malloc(sizeof(*httpd->listen))) == NULL) { ret = HTE_NOMEM; goto die; }
+		httpd->listen->fd = -1;
 	}
 	
 	/* create a socket */
-	if ((info->listen->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) { ret = HTE_SOCK; goto die; }
+	if ((httpd->listen->fd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) == -1) { ret = HTE_SOCK; goto die; }
 	
 	i = 1;
-	if (setsockopt(info->listen->fd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i)) != 0) { ret = HTE_SOCK; goto die; }
+	if (setsockopt(httpd->listen->fd, SOL_SOCKET, SO_REUSEADDR, &i, sizeof(i)) != 0) { ret = HTE_SOCK; goto die; }
 	
 	memset(&addrinfo, 0, sizeof(addrinfo));
 	addrinfo.sin_family = AF_INET;
-	addrinfo.sin_port = htons(info->listenPort);
+	addrinfo.sin_port = htons(httpd->listenPort);
 	addrinfo.sin_addr.s_addr = INADDR_ANY;
 	
-	if (bind(info->listen->fd, (const struct sockaddr *)&addrinfo, sizeof(addrinfo)) != 0) { ret = HTE_BIND; goto die; }
+	if (bind(httpd->listen->fd, (const struct sockaddr *)&addrinfo, sizeof(addrinfo)) != 0) { ret = HTE_BIND; goto die; }
 	
-	if (pthread_create(&info->listen->tid, NULL, srv_listenThread, (void*)info) != 0) { ret = HTE_THREAD; goto die; }
+	if (pthread_create(&httpd->listen->tid, NULL, srv_listenThread, (void*)httpd) != 0) { ret = HTE_THREAD; goto die; }
 	
 	return HTE_NONE;
 die:
-	if (info->listen) {
-		struct srv_listenInfo *listen = info->listen;
-		info->listen = NULL;
+	if (httpd->listen) {
+		struct srv_listenInfo *listen = httpd->listen;
+		httpd->listen = NULL;
 		
 		if (listen->fd != -1) {
 			
 			close(listen->fd);
 		}
 		
-		free(info->listen);
+		free(httpd->listen);
 	}
 	return ret;
 }
 
-void *srv_listenThread(void *_info) {
-	struct httpd_info *info = _info;
+void *srv_listenThread(void *_httpd) {
+	struct httpd_info *httpd = _httpd;
+	hte ret = HTE_NONE;
 	
 	int EINVALc = 0;
 	
-	int fd;
-	struct sockaddr_in addrinfo;
-	socklen_t addrlen;
+	struct session_info *session = NULL;
 	
 	for (;;) {
-		addrlen = sizeof(addrinfo);
-		if ((fd = accept(info->listen->fd, (struct sockaddr*)&addrinfo, &addrlen)) < 0) {
+		if (!session) {
+			if ((session = malloc(sizeof(*session))) == NULL) { ret = HTE_NOMEM; break; }
+			session->httpd = httpd;
+		}
+	
+		session->addrlen = sizeof(session->addrinfo);
+		if ((session->fd = accept(httpd->listen->fd, (struct sockaddr*)&session->addrinfo, &session->addrlen)) < 0) {
 			int e = errno;
 			
 			if (e == EAGAIN || e == EWOULDBLOCK) {
@@ -102,13 +107,20 @@ void *srv_listenThread(void *_info) {
 			
 			fprintf(stderr, "%s:%d %s(): accept() returned an error...\n\taccept(): %d: '%s'",
 			        __FILE__, __LINE__, __FUNCTION__, e, strerror(e));
+			
+			ret = HTE_ACCEPT;
 			break;
 		}
 		
-		/* handle the client */
+		if (pthread_create(&session->tid, NULL, session_handleConnection, (void*)session) != 0) {
+			fprintf(stderr, "%s:%d %s(): pthread_create() returned an error...\n\tpthread_create(): %d: '%s'",
+			        __FILE__, __LINE__, __FUNCTION__, errno, strerror(errno));
+		} else {
+			session = NULL;
+		}
 	}
 	
-	/* some sort of 'not-listening-anymore' callback? */
+	/* some sort of 'not-listening-anymore' callback? check ret! */
 	
 	return NULL;
 }

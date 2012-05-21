@@ -27,18 +27,23 @@ enum httpd_err {
 	HTE_NOMEM,
 	HTE_SOCK,
 	HTE_BIND,
+	HTE_ACCEPT,
 	HTE_THREAD,
+	HTE_READ,
+	HTE_PARSE,
+	HTE_RESPOND,
 };
 typedef enum httpd_err hte;
 
 struct httpd_info;
-struct rxInfo;
+struct xfer_info;
 
-typedef void (*httpd_callback)(int rxid, struct rxInfo *info);
+typedef void (*httpd_callback)(int rxid, struct xfer_info *info);
 
 struct httpd_info {
 	int listenPort;
 	struct srv_listenInfo *listen;
+	int rxid;
 	httpd_callback callback;
 };
 

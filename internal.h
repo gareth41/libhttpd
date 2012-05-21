@@ -24,6 +24,11 @@
 #define INIT   __attribute__((constructor))
 #define FINI   __attribute__((destructor))
 
+struct buf {
+	int len;
+	unsigned char data[1];
+};
+
 #include "httpd.h"
 
 #endif /* INTERNAL_H */
