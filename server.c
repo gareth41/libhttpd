@@ -30,6 +30,7 @@
 #include <arpa/inet.h>
 
 #include "internal.h"
+#include "interface.h"
 #include "server.h"
 #include "session.h"
 

@@ -21,33 +21,26 @@
 #include <stdlib.h>
 
 #include "internal.h"
-#include "session.h"
 #include "interface.h"
-#include "http.h"
+#include "server.h"
 
-void *session_handleConnection(void *_session) {
-	struct session_info *session = _session;
+EXPORT hte httpd_startServer(int listenPort, httpd_callback callback, struct httpd_info **_httpd) {
 	struct httpd_info *httpd;
-	hte ret = HTE_NONE;
-
-	if (!session || !session->httpd) return (void*)-1;
+	hte ret;
 	
-	httpd = session->httpd;
+	if (!callback || !_httpd) return HTE_INVALPARAM;
 	
-	if (http_read(session) != 0) { ret = HTE_READ; goto die; }
+	if ((httpd = malloc(sizeof(*httpd))) == NULL) return HTE_NOMEM;
 	
-	if (http_parse(session) != 0) { ret = HTE_PARSE; goto die; }
+	httpd->listenPort = listenPort;
+	httpd->callback = callback;
 	
-	httpd->callback(httpd->rxid++, session->xfer);
+	if ((ret = srv_listenStart(httpd)) != HTE_NONE) {
+		free(httpd);
+		return ret;
+	}
 	
-	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
+	*_httpd = httpd;
 	
-	goto done;
-die:
-	
-	/* some sort of 'an-error-occured' callback? check ret! */
-	
-done:
-	free(_session);
-	return NULL;
+	return HTE_NONE;
 }

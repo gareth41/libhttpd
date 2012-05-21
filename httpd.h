@@ -40,13 +40,6 @@ struct xfer_info;
 
 typedef void (*httpd_callback)(int rxid, struct xfer_info *info);
 
-struct httpd_info {
-	int listenPort;
-	struct srv_listenInfo *listen;
-	int rxid;
-	httpd_callback callback;
-};
-
-struct httpd_info *httpd_startServer(int port, httpd_callback callback);
+hte httpd_startServer(int listenPort, httpd_callback callback, struct httpd_info **httpd);
 
 #endif /* __HTTPD_H */

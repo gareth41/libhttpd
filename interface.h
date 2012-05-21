@@ -1,3 +1,6 @@
+#ifndef INTERFACE_H
+#define INTERFACE_H
+
 /*
 	libhttpd - a C library to aid serving and responding to HTTP requests
 
@@ -17,37 +20,11 @@
 	along with libxbee. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <stdio.h>
-#include <stdlib.h>
+struct httpd_info {
+	int listenPort;
+	struct srv_listenInfo *listen;
+	int rxid;
+	httpd_callback callback;
+};
 
-#include "internal.h"
-#include "session.h"
-#include "interface.h"
-#include "http.h"
-
-void *session_handleConnection(void *_session) {
-	struct session_info *session = _session;
-	struct httpd_info *httpd;
-	hte ret = HTE_NONE;
-
-	if (!session || !session->httpd) return (void*)-1;
-	
-	httpd = session->httpd;
-	
-	if (http_read(session) != 0) { ret = HTE_READ; goto die; }
-	
-	if (http_parse(session) != 0) { ret = HTE_PARSE; goto die; }
-	
-	httpd->callback(httpd->rxid++, session->xfer);
-	
-	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
-	
-	goto done;
-die:
-	
-	/* some sort of 'an-error-occured' callback? check ret! */
-	
-done:
-	free(_session);
-	return NULL;
-}
+#endif /* INTERFACE_H */
