@@ -1,5 +1,5 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef INTERNAL_H
+#define INTERNAL_H
 
 /*
 	libhttpd - a C library to aid serving and responding to HTTP requests
@@ -20,12 +20,10 @@
 	along with libxbee. If not, see <http://www.gnu.org/licenses/>.
 */
 
-struct srv_listenInfo {
-	int fd;
-	pthread_t tid;
-};
+#define EXPORT __attribute__((visibility("default")))
+#define INIT   __attribute__((constructor))
+#define FINI   __attribute__((destructor))
 
-int srv_listenStart(struct httpd_info *info);
-void *srv_listenThread(void *_info);
+#include "httpd.h"
 
-#endif /* SERVER_H */
+#endif /* INTERNAL_H */

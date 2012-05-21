@@ -1,5 +1,5 @@
-#ifndef SERVER_H
-#define SERVER_H
+#ifndef __HTTPD_H
+#define __HTTPD_H
 
 /*
 	libhttpd - a C library to aid serving and responding to HTTP requests
@@ -20,12 +20,28 @@
 	along with libxbee. If not, see <http://www.gnu.org/licenses/>.
 */
 
-struct srv_listenInfo {
-	int fd;
-	pthread_t tid;
+enum httpd_err {
+	HTE_NONE = 0,
+	HTE_UNKNOWN = -1,
+	HTE_INVALPARAM,
+	HTE_NOMEM,
+	HTE_SOCK,
+	HTE_BIND,
+	HTE_THREAD,
+};
+typedef enum httpd_err hte;
+
+struct httpd_info;
+struct rxInfo;
+
+typedef void (*httpd_callback)(int rxid, struct rxInfo *info);
+
+struct httpd_info {
+	int listenPort;
+	struct srv_listenInfo *listen;
+	httpd_callback callback;
 };
 
-int srv_listenStart(struct httpd_info *info);
-void *srv_listenThread(void *_info);
+struct httpd_info *httpd_startServer(int port, httpd_callback callback);
 
-#endif /* SERVER_H */
+#endif /* __HTTPD_H */
