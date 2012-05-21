@@ -26,10 +26,11 @@
 #include "http.h"
 
 void *session_handleConnection(void *_session) {
+	char err_buf[] = "HTTP/1.1 500 Internal Server Error\r\n\r\nAn internal error occured.\r\n";
 	struct session_info *session = _session;
 	struct httpd_info *httpd;
 	hte ret = HTE_NONE;
-
+	
 	if (!session || !session->httpd) return (void*)-1;
 	
 	httpd = session->httpd;
@@ -46,8 +47,13 @@ void *session_handleConnection(void *_session) {
 die:
 	
 	/* some sort of 'an-error-occured' callback? check ret! */
+	send(session->fd, err_buf, sizeof(err_buf), 0);
 	
 done:
+	
+	shutdown(session->fd, SHUT_RDWR);
+	close(session->fd);
+	
 	free(_session);
 	return NULL;
 }

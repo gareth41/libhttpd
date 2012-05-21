@@ -27,6 +27,7 @@ enum httpd_err {
 	HTE_NOMEM,
 	HTE_SOCK,
 	HTE_BIND,
+	HTE_LISTEN,
 	HTE_ACCEPT,
 	HTE_THREAD,
 	HTE_READ,

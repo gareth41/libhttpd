@@ -8,6 +8,8 @@ VER_MAJ=0
 VER_MIN=0
 VER_REV=1
 
+LIBS=pthread
+
 CFLAGS=-Wall -c -fPIC $(DEBUG) $(addprefix -D,$(OPTIONS)) -fvisibility=hidden -Wstrict-prototypes -Wno-variadic-macros
 CLINKS=-fPIC $(addprefix -l,$(LIBS)) $(DEBUG)
 

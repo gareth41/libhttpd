@@ -62,6 +62,8 @@ int srv_listenStart(struct httpd_info *httpd) {
 	
 	if (bind(httpd->listen->fd, (const struct sockaddr *)&addrinfo, sizeof(addrinfo)) != 0) { ret = HTE_BIND; goto die; }
 	
+	if (listen(httpd->listen->fd, 512) != 0) { ret = HTE_LISTEN; goto die; }
+	
 	if (pthread_create(&httpd->listen->tid, NULL, srv_listenThread, (void*)httpd) != 0) { ret = HTE_THREAD; goto die; }
 	
 	return HTE_NONE;
@@ -106,7 +108,7 @@ void *srv_listenThread(void *_httpd) {
 				continue;
 			}
 			
-			fprintf(stderr, "%s:%d %s(): accept() returned an error...\n\taccept(): %d: '%s'",
+			fprintf(stderr, "%s:%d %s(): accept() returned an error...\n\taccept(): %d: '%s'\n",
 			        __FILE__, __LINE__, __FUNCTION__, e, strerror(e));
 			
 			ret = HTE_ACCEPT;
@@ -114,9 +116,10 @@ void *srv_listenThread(void *_httpd) {
 		}
 		
 		if (pthread_create(&session->tid, NULL, session_handleConnection, (void*)session) != 0) {
-			fprintf(stderr, "%s:%d %s(): pthread_create() returned an error...\n\tpthread_create(): %d: '%s'",
+			fprintf(stderr, "%s:%d %s(): pthread_create() returned an error...\n\tpthread_create(): %d: '%s'\n",
 			        __FILE__, __LINE__, __FUNCTION__, errno, strerror(errno));
 		} else {
+			printf("made a thread (0x%X)\n", session->tid);
 			session = NULL;
 		}
 	}
