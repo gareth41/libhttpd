@@ -25,7 +25,7 @@ GCC=$(CROSS_TOOL)gcc
 all: $(LIBDIR)/$(LIBNAME).so
 
 $(LIBDIR)/$(LIBNAME).so: .$(LIBDIR).dir $(LIBDIR)/$(LIBNAME).so.$(LIB_VER)
-	ln -s `basename $(filter %.so.$(LIB_VER),$^)` $@
+	if [ ! -e $@ ]; then ln -sf `basename $(filter %.so.$(LIB_VER),$^)` $@; fi
 
 $(LIBDIR)/$(LIBNAME).so.$(LIB_VER): .$(LIBDIR).dir $(OBJS)
 	$(GCC) --shared -Wl,-soname,$(LIBNAME).so.$(LIB_VER) $(CLINKS) $(filter %.o,$^) -o $@
