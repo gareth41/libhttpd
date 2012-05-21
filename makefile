@@ -8,7 +8,8 @@ VER_MAJ=0
 VER_MIN=0
 VER_REV=1
 
-CFLAGS=
+CFLAGS=-Wall -c -fPIC $(DEBUG) $(addprefix -D,$(OPTIONS)) -fvisibility=hidden -Wstrict-prototypes -Wno-variadic-macros
+CLINKS=-fPIC $(addprefix -l,$(LIBS)) $(DEBUG)
 
 #--------#
 
@@ -23,14 +24,6 @@ GCC=$(CROSS_TOOL)gcc
 #--------#
 
 all: $(LIBDIR)/$(LIBNAME).so
-
-$(LIBDIR)/$(LIBNAME).so: .$(LIBDIR).dir $(LIBDIR)/$(LIBNAME).so.$(LIB_VER)
-	if [ ! -e $@ ]; then ln -sf `basename $(filter %.so.$(LIB_VER),$^)` $@; fi
-
-$(LIBDIR)/$(LIBNAME).so.$(LIB_VER): .$(LIBDIR).dir $(OBJS)
-	$(GCC) --shared -Wl,-soname,$(LIBNAME).so.$(LIB_VER) $(CLINKS) $(filter %.o,$^) -o $@
-
-#--------#
 
 new: clean
 	$(MAKE) --no-print-directory all
@@ -47,10 +40,18 @@ mrproper:
 
 #--------#
 
-$(OBJS): $(BUILDDIR)/%.o: .$(BUILDDIR).dir %.c $(BUILDDIR)/%.d
+$(LIBDIR)/$(LIBNAME).so: .$(LIBDIR).dir $(LIBDIR)/$(LIBNAME).so.$(LIB_VER)
+	@if [ ! -e $@ ]; then CMD="ln -sf `basename $(filter %.so.$(LIB_VER),$^)` $@"; echo $${CMD}; $${CMD}; fi
+
+$(LIBDIR)/$(LIBNAME).so.$(LIB_VER): .$(LIBDIR).dir $(OBJS) makefile
+	$(GCC) --shared -Wl,-soname,$(LIBNAME).so.$(LIB_VER) $(CLINKS) $(filter %.o,$^) -o $@
+
+#--------#
+
+$(OBJS): $(BUILDDIR)/%.o: .$(BUILDDIR).dir %.c $(BUILDDIR)/%.d makefile
 	$(GCC) $(CFLAGS) $*.c -c -o $@
 
-$(patsubst %.o,%.d,$(OBJS)): $(BUILDDIR)/%.d: .$(BUILDDIR).dir %.c
+$(patsubst %.o,%.d,$(OBJS)): $(BUILDDIR)/%.d: .$(BUILDDIR).dir %.c makefile
 	$(GCC) -MM -MT $(@:.d=.o) $(filter %.c,$^) -o $@
 
 .%.dir:
@@ -62,3 +63,7 @@ $(patsubst %.o,%.d,$(OBJS)): $(BUILDDIR)/%.d: .$(BUILDDIR).dir %.c
 		echo "Error: '$*' already exists, but is not a directory..."; \
 		false; \
 	fi;
+
+#--------#
+
+-include $(wildcard $(BUILDDIR)/*.d)
