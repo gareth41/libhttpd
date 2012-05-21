@@ -32,6 +32,9 @@ $(LIBDIR)/$(LIBNAME).so.$(LIB_VER): .$(LIBDIR).dir $(OBJS)
 
 #--------#
 
+new: clean
+	$(MAKE) --no-print-directory all
+
 clean:
 	rm -rf $(OBJS) $(LIBDIR)/$(LIBNAME).so $(LIBDIR)/$(LIBNAME).so.$(LIB_VER)
 
