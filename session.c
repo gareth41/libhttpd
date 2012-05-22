@@ -26,7 +26,7 @@
 #include "http.h"
 
 void *session_handleConnection(void *_session) {
-	char err_buf[] = "HTTP/1.1 500 Internal Server Error\r\n\r\nAn internal error occured.\r\n";
+	char err_buf[] = "HTTP/1.1 500 Internal Server Error\r\n";
 	struct session_info *session = _session;
 	struct httpd_info *httpd;
 	hte ret = HTE_NONE;
