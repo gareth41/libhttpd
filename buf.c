@@ -1,6 +1,3 @@
-#ifndef INTERNAL_H
-#define INTERNAL_H
-
 /*
 	libhttpd - a C library to aid serving and responding to HTTP requests
 
@@ -20,10 +17,40 @@
 	along with libxbee. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#define EXPORT __attribute__((visibility("default")))
-#define INIT   __attribute__((constructor))
-#define FINI   __attribute__((destructor))
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
 
-#include "httpd.h"
+#include "internal.h"
+#include "buf.h"
 
-#endif /* INTERNAL_H */
+struct buf *buf_alloc(struct buf *_buf, size_t size) {
+	size_t tot_size;
+	struct buf *buf;
+	
+	tot_size = size + sizeof(*buf);
+	
+	if (size <= 0) {
+		if (_buf) buf_free(_buf);
+		return NULL;
+	}
+	
+	if ((buf = realloc(_buf, tot_size)) == NULL) return NULL;
+	
+	if (!_buf) {
+		/* wipe everything in preparation */
+		memset(buf, 0, tot_size);
+	} else {
+		if (size > buf->len) {
+			/* only wipe the new space (if it grew) */
+			memset(&(buf->data[buf->len]), 0, size - buf->len + 1);
+		}
+	}
+	buf->len = size;
+	
+	return buf;
+}
+
+void buf_free(struct buf *buf) {
+	free(buf);
+}
