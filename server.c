@@ -93,6 +93,7 @@ void *srv_listenThread(void *_httpd) {
 	for (;;) {
 		if (!session) {
 			if ((session = malloc(sizeof(*session))) == NULL) { ret = HTE_NOMEM; break; }
+			memset(session, 0, sizeof(*session));
 			session->httpd = httpd;
 		}
 	
