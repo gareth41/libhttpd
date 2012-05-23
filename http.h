@@ -58,6 +58,7 @@ struct http_request {
 };
 
 struct http_response {
+	struct buf *headBuf;
 	struct buf *buf;
 	
 	unsigned char *httpVersion;
@@ -69,6 +70,7 @@ struct http_response {
 
 hte http_read(struct session_info *session);
 hte http_parse(struct session_info *session);
+hte http_parse_fixup(struct session_info *session);
 hte http_respond(struct session_info *session);
 
 #endif /* HTTP_H */

@@ -31,6 +31,7 @@ enum httpd_err {
 	HTE_ACCEPT,
 	HTE_THREAD,
 	HTE_READ,
+	HTE_WRITE,
 	HTE_PARSE,
 	HTE_RESPOND,
 };

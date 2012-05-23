@@ -58,6 +58,9 @@ hte add_header(struct http_data *data, unsigned char *field_name, unsigned char 
 	return HTE_NONE;
 }
 
+/* ########################################################################## */
+
+/* BE AWARE! during the parse, until http_parse_fixup() is called, all pointers are held as indexes */
 hte http_read(struct session_info *session) {
 	hte ret = HTE_NONE;
 	struct http_request *req;
@@ -95,6 +98,8 @@ hte http_read(struct session_info *session) {
 	
 	if (req->state != STATE_COMPLETE) { ret = HTE_PARSE; goto die; }
 	
+	if ((ret = http_parse_fixup(session)) != HTE_NONE) goto die;
+	
 	return HTE_NONE;
 die:
 	return ret;
@@ -106,11 +111,13 @@ hte http_parse(struct session_info *session) {
 	unsigned char *sol,  *eol;  /* {start|end} of line */
 	unsigned char *sof1, *eof1; /* {start|end} of field 1 */
 	unsigned char *sof2, *eof2; /* {start|end} of field 2 */
-	unsigned char        *eod;  /* end of data */
+	unsigned char *sod,  *eod;  /* {start|end} of data */
 	
 	if (!session || !session->xfer.request) return HTE_INVALPARAM;
 	req = session->xfer.request;
 	
+#define INDEXOF(a) (void*)((a) - sod)
+	sod = req->buf->data;
 	sol = &(req->buf->data[req->parsePos]);
 	eod = &(req->buf->data[req->buf->next - 1]);
 	
@@ -133,18 +140,18 @@ hte http_parse(struct session_info *session) {
 				/* get the method */
 				http_getField(sof1, &eof1, eod, ' ');
 				if (eof1 == NULL) { ret = HTE_PARSE; goto die; };
-				req->method = sof1;
+				req->method = INDEXOF(sof1);
 				sof1 = eof1 + 2;
 				
 				/* get the uri */
 				http_getField(sof1, &eof1, eod, ' ');
 				if (eof1 == NULL) { ret = HTE_PARSE; goto die; };
-				req->uri = sof1;
+				req->uri = INDEXOF(sof1);
 				sof1 = eof1 + 2;
 				
 				/* get the http version */
 				if (eof1 + 2 >= eol) { ret = HTE_PARSE; goto die; }
-				req->httpVersion = eof1 + 2;
+				req->httpVersion = INDEXOF(eof1 + 2);
 				
 				req->state = STATE_PARSING_HEADERS;
 				
@@ -171,7 +178,7 @@ hte http_parse(struct session_info *session) {
 				http_trimField(&sof1, &eof1); eof1[1] = '\0';
 				http_trimField(&sof2, &eof2); eof2[1] = '\0';
 				
-				add_header(&req->data, sof1, sof2);
+				add_header(&req->data, INDEXOF(sof1), INDEXOF(sof2));
 				
 				if (!strcasecmp((char*)sof1,"Content-Length")) {
 					int i;
@@ -186,7 +193,7 @@ hte http_parse(struct session_info *session) {
 				req->state = STATE_PARSING_CONTENT;
 			case STATE_PARSING_CONTENT:
 				if (!req->data.content) {
-					req->data.content = sol;
+					req->data.content = INDEXOF(sol);
 					req->data.contentReceived = eod - sol + 1;
 					req->parsePos = eod - req->buf->data;
 				} else {
@@ -218,13 +225,74 @@ hte http_parse(struct session_info *session) {
 		
 		req->parsePos = sol - req->buf->data;
 	}
+#undef INDEXOF
 	
 	return HTE_NONE;
 die:
 	req->state = STATE_ERROR;
 	return ret;
 }
+hte http_parse_fixup(struct session_info *session) {
+	struct http_request *req;
+	int i;
+	
+	if (!session || !session->xfer.request) return HTE_INVALPARAM;
+	req = session->xfer.request;
+	
+#define FIXUP(a) a += (long)req->buf->data
+	FIXUP(req->method);
+	FIXUP(req->uri);
+	FIXUP(req->httpVersion);
+	for (i = 0; i < req->data.headerc; i++) {
+		if (!req->data.headers[i].name) continue;
+		FIXUP(req->data.headers[i].name);
+		if (!req->data.headers[i].value) continue;
+		FIXUP(req->data.headers[i].value);
+	}
+	if (req->data.content != NULL) FIXUP(req->data.content);
+#undef FIXUP
+
+	return HTE_NONE;
+}
 
 hte http_respond(struct session_info *session) {
-	return HTE_UNKNOWN;
+	hte ret;
+	int l, i;
+	int gotContentLength = 0;
+	
+	struct http_response *rsp;
+	
+	ret = HTE_NONE;
+	
+	if (!session || !session->xfer.response) return HTE_INVALPARAM;
+	rsp = session->xfer.response;
+	
+	/* add the HTTP status line */
+	if ((l = bufcatf(&rsp->headBuf, "%s %d %s\r\n", rsp->httpVersion, rsp->httpCode, rsp->httpReason)) <= 0) { ret = HTE_RESPOND; goto die; }
+	
+	/* add the headers */
+	for (i = 0; i < rsp->data.headerc; i++) {
+		if (rsp->data.headers[i].name == NULL) continue;
+		if (!strcasecmp((char*)rsp->data.headers[i].name, "Content-Length")) gotContentLength = 1;
+		if (rsp->data.headers[i].value == NULL) {
+			if ((l = bufcatf(&rsp->headBuf, "%s\r\n", rsp->data.headers[i].name)) <= 0) { ret = HTE_RESPOND; goto die; }
+		} else {
+			if ((l = bufcatf(&rsp->headBuf, "%s: %s\r\n", rsp->data.headers[i].name, rsp->data.headers[i].value)) <= 0) { ret = HTE_RESPOND; goto die; }
+		}
+	}
+	if (rsp->buf) {
+		if ((l = bufcatf(&rsp->headBuf, "Content-Length: %d\r\n", rsp->buf->len)) <= 0) { ret = HTE_RESPOND; goto die; }
+	} else {
+		if ((l = bufcatf(&rsp->headBuf, "Content-Length: 0\r\n")) <= 0) { ret = HTE_RESPOND; goto die; }
+	}
+	
+	/* add the blank line */
+	if ((l = bufcatf(&rsp->headBuf, "\r\n")) <= 0) { ret = HTE_RESPOND; goto die; }
+	
+	if ((ret = buf_send(session->fd, rsp->headBuf)) != HTE_NONE) goto die;
+	if (rsp->buf) if ((ret = buf_send(session->fd, rsp->buf)) != HTE_NONE) goto die;
+	
+	return HTE_NONE;
+die:
+	return ret;
 }
