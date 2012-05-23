@@ -114,7 +114,7 @@ hte buf_send(int fd, struct buf *buf) {
 	if (!buf || fd == -1) return HTE_WRITE;
 	
 	for (p = 0; p < buf->len; p += l) {
-		if ((l = send(fd, &(buf->data[p]), buf->len - p, 0)) > 0) continue;
+		if ((l = send(fd, &(buf->data[p]), buf->len - p, MSG_NOSIGNAL)) > 0) continue;
 		return HTE_WRITE;
 	}
 	

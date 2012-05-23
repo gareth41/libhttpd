@@ -64,7 +64,7 @@ void *session_handleConnection(void *_session) {
 die:
 	
 	/* some sort of 'an-error-occured' callback? check ret! */
-	send(session->fd, err_buf, sizeof(err_buf), 0);
+	send(session->fd, err_buf, sizeof(err_buf), MSG_NOSIGNAL);
 	
 done:
 	
