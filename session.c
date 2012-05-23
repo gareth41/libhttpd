@@ -41,12 +41,12 @@ void *session_handleConnection(void *_session) {
 	httpd = session->httpd;
 	
 	if (!session->xfer.request) {
-		if ((session->xfer.request = malloc(sizeof(*session->xfer.request))) == NULL) goto die;
+		if ((session->xfer.request = malloc(sizeof(*session->xfer.request))) == NULL) { ret = HTE_NOMEM; goto die; }
 		memset(session->xfer.request, 0, sizeof(*session->xfer.request));
 	}
 	
 	if (!session->xfer.response) {
-		if ((session->xfer.response = malloc(sizeof(*session->xfer.response))) == NULL) goto die;
+		if ((session->xfer.response = malloc(sizeof(*session->xfer.response))) == NULL) { ret = HTE_NOMEM; goto die; }
 		memset(session->xfer.response, 0, sizeof(*session->xfer.response));
 	}
 	
@@ -77,6 +77,7 @@ done:
 		free(session->xfer.request);
 	}
 	if (session->xfer.response) {
+		if (session->xfer.response->headBuf) buf_free(session->xfer.response->headBuf);
 		if (session->xfer.response->buf) buf_free(session->xfer.response->buf);
 		if (session->xfer.response->data.headers) free(session->xfer.response->data.headers);
 		free(session->xfer.response);
