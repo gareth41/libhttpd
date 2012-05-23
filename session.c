@@ -73,10 +73,12 @@ done:
 	
 	if (session->xfer.request) {
 		if (session->xfer.request->buf) buf_free(session->xfer.request->buf);
+		if (session->xfer.request->data.headers) free(session->xfer.request->data.headers);
 		free(session->xfer.request);
 	}
 	if (session->xfer.response) {
 		if (session->xfer.response->buf) buf_free(session->xfer.response->buf);
+		if (session->xfer.response->data.headers) free(session->xfer.response->data.headers);
 		free(session->xfer.response);
 	}
 	
