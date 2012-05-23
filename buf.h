@@ -32,4 +32,7 @@ struct buf {
 struct buf *buf_alloc(struct buf *_buf, size_t size);
 void buf_free(struct buf *buf);
 
+int bufcatf(struct buf **buf, char *format, ...);
+hte buf_send(int fd, struct buf *buf);
+
 #endif /* BUF_H */
