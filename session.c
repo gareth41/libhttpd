@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <pthread.h>
 
 #include "internal.h"
 #include "session.h"
@@ -33,6 +34,8 @@ void *session_handleConnection(void *_session) {
 	struct session_info *session = _session;
 	struct httpd_info *httpd;
 	hte ret = HTE_NONE;
+	
+	pthread_detach(pthread_self());
 	
 	if (!session || !session->httpd) return (void*)-1;
 	httpd = session->httpd;
@@ -51,7 +54,7 @@ void *session_handleConnection(void *_session) {
 	
 	session->xfer.response->httpVersion = session->xfer.request->httpVersion;
 	session->xfer.response->httpCode = 200;
-	session->xfer.response->httpReason = "Success";
+	session->xfer.response->httpReason = (unsigned char*)"Success";
 	
 	httpd->callback(httpd->rxid++, &session->xfer);
 	

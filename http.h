@@ -31,13 +31,18 @@ enum http_state {
 	STATE_ERROR
 };
 
+struct http_header {
+	unsigned char *name;
+	unsigned char *value;
+};
+
 struct http_data {
 	struct http_header *headers;
 	int headerc;
 	
 	size_t contentLength;
 	size_t contentReceived;
-	char *content;
+	unsigned char *content;
 };
 
 struct http_request {
@@ -45,9 +50,9 @@ struct http_request {
 	size_t parsePos;
 	enum http_state state;
 	
-	char *method;
-	char *uri;
-	char *httpVersion;
+	unsigned char *method;
+	unsigned char *uri;
+	unsigned char *httpVersion;
 	
 	struct http_data data;
 };
@@ -55,9 +60,9 @@ struct http_request {
 struct http_response {
 	struct buf *buf;
 	
-	char *httpVersion;
+	unsigned char *httpVersion;
 	int httpCode;
-	char *httpReason;
+	unsigned char *httpReason;
 	
 	struct http_data data;
 };

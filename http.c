@@ -43,6 +43,18 @@ void inline http_trimField(unsigned char **start, unsigned char **end) {
 }
 
 hte add_header(struct http_data *data, unsigned char *field_name, unsigned char *field_value) {
+	void *p;
+	int c;
+	
+	c = data->headerc + 1;
+	if ((p = realloc(data->headers, sizeof(*data->headers) * c)) == NULL) return HTE_NOMEM;
+	data->headers = p;
+	
+	data->headers[data->headerc].name = field_name;
+	data->headers[data->headerc].value = field_value;
+	
+	data->headerc = c;
+	
 	return HTE_NONE;
 }
 
@@ -121,18 +133,18 @@ hte http_parse(struct session_info *session) {
 				/* get the method */
 				http_getField(sof1, &eof1, eod, ' ');
 				if (eof1 == NULL) { ret = HTE_PARSE; goto die; };
-				req->method = (char *)sof1;
+				req->method = sof1;
 				sof1 = eof1 + 2;
 				
 				/* get the uri */
 				http_getField(sof1, &eof1, eod, ' ');
 				if (eof1 == NULL) { ret = HTE_PARSE; goto die; };
-				req->uri = (char *)sof1;
+				req->uri = sof1;
 				sof1 = eof1 + 2;
 				
 				/* get the http version */
 				if (eof1 + 2 >= eol) { ret = HTE_PARSE; goto die; }
-				req->httpVersion = (char*)(eof1 + 2);
+				req->httpVersion = eof1 + 2;
 				
 				req->state = STATE_GETTING_HEADERS;
 				
@@ -174,7 +186,7 @@ hte http_parse(struct session_info *session) {
 				req->state = STATE_GETTING_CONTENT;
 			case STATE_GETTING_CONTENT:
 				if (!req->data.content) {
-					req->data.content = (char*)sol;
+					req->data.content = sol;
 					req->data.contentReceived = eod - sol + 1;
 					req->parsePos = eod - req->buf->data;
 				} else {
