@@ -280,10 +280,12 @@ hte http_respond(struct session_info *session) {
 			if ((l = bufcatf(&rsp->headBuf, "%s: %s\r\n", rsp->data.headers[i].name, rsp->data.headers[i].value)) <= 0) { ret = HTE_RESPOND; goto die; }
 		}
 	}
-	if (rsp->buf) {
-		if ((l = bufcatf(&rsp->headBuf, "Content-Length: %d\r\n", rsp->buf->len)) <= 0) { ret = HTE_RESPOND; goto die; }
-	} else {
-		if ((l = bufcatf(&rsp->headBuf, "Content-Length: 0\r\n")) <= 0) { ret = HTE_RESPOND; goto die; }
+	if (gotContentLength == 0) {
+		if (rsp->buf) {
+			if ((l = bufcatf(&rsp->headBuf, "Content-Length: %d\r\n", rsp->buf->len)) <= 0) { ret = HTE_RESPOND; goto die; }
+		} else {
+			if ((l = bufcatf(&rsp->headBuf, "Content-Length: 0\r\n")) <= 0) { ret = HTE_RESPOND; goto die; }
+		}
 	}
 	
 	/* add the blank line */
