@@ -98,5 +98,5 @@ EXPORT hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap) {
 	if (vbufcatf(&info->response->buf, format, ap2) < 0) ret = HTE_RESPOND;
 	va_end(ap2);
 	
-	return HTE_NONE;
+	return ret;
 }
