@@ -22,7 +22,7 @@
 #include <httpd.h>
 
 void client_callback(int rxid, struct xfer_info *info) {
-	printf("New client!\n");
+	printf("New client! %d\n", rxid);
 }
 
 int main(int argc, char *argv[]) {
