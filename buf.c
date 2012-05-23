@@ -61,15 +61,26 @@ void buf_free(struct buf *buf) {
 
 
 int bufcatf(struct buf **buf, char *format, ...) {
-	int l, l2;
 	va_list ap;
+	int ret;
+	
+	va_start(ap, format);
+	ret = vbufcatf(buf, format, ap);
+	va_end(ap);
+	
+	return ret;
+}
+int vbufcatf(struct buf **buf, char *format, va_list ap) {
+	int l, l1, l2;
+	va_list ap2;
 	
 	if (!buf || !format) return -1;
 	
-	va_start(ap, format);
-	l = vsnprintf(NULL, 0, format, ap);
-	va_end(ap);
+	va_copy(ap2, ap);
+	l1 = l = vsnprintf(NULL, 0, format, ap2);
+	va_end(ap2);
 	if (l <= 0) return l;
+	l++; /* <-- space for the nul */
 	
 	if (*buf == NULL || (*buf)->next + l > (*buf)->len) {
 		void *p;
@@ -81,14 +92,15 @@ int bufcatf(struct buf **buf, char *format, ...) {
 			n = 0;
 		}
 		
-		if ((p = buf_alloc(*buf, n + l)) == NULL) return -2;
+		if ((p = buf_alloc(*buf, n + l1)) == NULL) return -2;
 		*buf = p;
 	}
 	
-	va_start(ap, format);
-	l2 = vsnprintf((char*)&((*buf)->data[(*buf)->next]), l, format, ap);
-	va_end(ap);
+	va_copy(ap2, ap);
+	l2 = vsnprintf((char*)&((*buf)->data[(*buf)->next]), l, format, ap2);
+	va_end(ap2);
 	if (l2 <= 0) return l2;
+	l2++; /* <-- space for the nul */
 	
 	if (l != l2) return -3;
 	
