@@ -24,6 +24,8 @@
 #define INIT   __attribute__((constructor))
 #define FINI   __attribute__((destructor))
 
+#define LH fprintf(stderr, "%s:%d %s()\n", __FILE__, __LINE__, __FUNCTION__);
+
 #include "httpd.h"
 
 #endif /* INTERNAL_H */

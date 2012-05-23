@@ -24,8 +24,8 @@
 #include <arpa/inet.h>
 
 struct xfer_info {
-	struct buf *inBuf;
-	struct buf *outBuf;
+	struct http_request *request;
+	struct http_response *response;
 };
 
 struct session_info {
@@ -34,7 +34,8 @@ struct session_info {
 	socklen_t addrlen;
 	pthread_t tid;
 	struct httpd_info *httpd;
-	struct xfer_info *xfer;
+
+	struct xfer_info xfer;
 };
 
 void *session_handleConnection(void *_session);

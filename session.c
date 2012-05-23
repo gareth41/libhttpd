@@ -19,11 +19,14 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 
 #include "internal.h"
 #include "session.h"
 #include "interface.h"
 #include "http.h"
+#include "buf.h"
 
 void *session_handleConnection(void *_session) {
 	char err_buf[] = "HTTP/1.1 500 Internal Server Error\r\n";
@@ -32,14 +35,21 @@ void *session_handleConnection(void *_session) {
 	hte ret = HTE_NONE;
 	
 	if (!session || !session->httpd) return (void*)-1;
-	
 	httpd = session->httpd;
+	
+	if (!session->xfer.request) {
+		if ((session->xfer.request = malloc(sizeof(*session->xfer.request))) == NULL) goto die;
+		memset(session->xfer.request, 0, sizeof(*session->xfer.request));
+	}
+	
+	if (!session->xfer.response) {
+		if ((session->xfer.response = malloc(sizeof(*session->xfer.response))) == NULL) goto die;
+		memset(session->xfer.response, 0, sizeof(*session->xfer.response));
+	}
 	
 	if (http_read(session) != 0) { ret = HTE_READ; goto die; }
 	
-	if (http_parse(session) != 0) { ret = HTE_PARSE; goto die; }
-	
-	httpd->callback(httpd->rxid++, session->xfer);
+	httpd->callback(httpd->rxid++, &session->xfer);
 	
 	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
 	
@@ -53,6 +63,15 @@ done:
 	
 	shutdown(session->fd, SHUT_RDWR);
 	close(session->fd);
+	
+	if (session->xfer.request) {
+		if (session->xfer.request->buf) buf_free(session->xfer.request->buf);
+		free(session->xfer.request);
+	}
+	if (session->xfer.response) {
+		if (session->xfer.response->buf) buf_free(session->xfer.response->buf);
+		free(session->xfer.response);
+	}
 	
 	free(_session);
 	return NULL;

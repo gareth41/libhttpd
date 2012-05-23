@@ -22,6 +22,46 @@
 
 struct session_info;
 
+enum http_state {
+	STATE_START = 0,
+	STATE_GETTING_HEADERS,
+	STATE_START_CONTENT,
+	STATE_GETTING_CONTENT,
+	STATE_COMPLETE,
+	STATE_ERROR
+};
+
+struct http_data {
+	struct http_header *headers;
+	int headerc;
+	
+	size_t contentLength;
+	size_t contentReceived;
+	char *content;
+};
+
+struct http_request {
+	struct buf *buf;
+	size_t parsePos;
+	enum http_state state;
+	
+	char *method;
+	char *uri;
+	char *httpVersion;
+	
+	struct http_data data;
+};
+
+struct http_response {
+	struct buf *buf;
+	
+	char *httpVersion;
+	int httpCode;
+	char *httpReason;
+	
+	struct http_data data;
+};
+
 hte http_read(struct session_info *session);
 hte http_parse(struct session_info *session);
 hte http_respond(struct session_info *session);
