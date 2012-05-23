@@ -56,7 +56,7 @@ void *session_handleConnection(void *_session) {
 	session->xfer.response->httpCode = 200;
 	session->xfer.response->httpReason = (unsigned char*)"Success";
 	
-	httpd->callback(httpd->rxid++, &session->xfer);
+	httpd->callback(httpd->rxid++, &session->xfer, (char*)session->xfer.request->buf->data, session->xfer.request->buf->len);
 	
 	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
 	

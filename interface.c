@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 #include "internal.h"
 #include "interface.h"
@@ -48,9 +49,36 @@ EXPORT hte httpd_startServer(int listenPort, httpd_callback callback, struct htt
 	return HTE_NONE;
 }
 
+EXPORT char *httpd_getMethod(struct xfer_info *info) {
+	if (!info) return HTE_INVALPARAM;
+	return (char *)info->request->method;
+}
+EXPORT char *httpd_getURI(struct xfer_info *info) {
+	if (!info) return HTE_INVALPARAM;
+	return (char *)info->request->uri;
+}
+EXPORT char *httpd_getHttpVersion(struct xfer_info *info) {
+	if (!info) return HTE_INVALPARAM;
+	return (char *)info->request->httpVersion;
+}
+EXPORT char *httpd_getHeader(struct xfer_info *info, char *field_name) {
+	int i;
+	struct http_data *data;
+	if (!info || !field_name) return HTE_INVALPARAM;
+	data = &info->request->data;
+	for (i = 0; i < data->headerc; i++) {
+		if (data->headers[i].name == NULL) continue;
+		if (strcasecmp((char*)data->headers[i].name, field_name)) continue;
+		return (char *)data->headers[i].value;
+	}
+	return NULL;
+}
+
 EXPORT hte httpd_respond(struct xfer_info *info, char *format, ...) {
 	va_list ap;
 	hte ret;
+	
+	if (!info || !format) return HTE_INVALPARAM;
 	
 	va_start(ap, format);
 	ret = httpd_vrespond(info, format, ap);
@@ -61,6 +89,8 @@ EXPORT hte httpd_respond(struct xfer_info *info, char *format, ...) {
 EXPORT hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap) {
 	va_list ap2;
 	hte ret;
+	
+	if (!info || !format) return HTE_INVALPARAM;
 	
 	ret = HTE_NONE;
 	

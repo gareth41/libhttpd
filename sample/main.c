@@ -21,10 +21,14 @@
 #include <stdlib.h>
 #include <httpd.h>
 
-void client_callback(int rxid, struct xfer_info *info) {
+void client_callback(int rxid, struct xfer_info *info, char *content, int contentLength) {
+	char *uri;
+	
 	printf("New client! %d\n", rxid);
 	
-	httpd_respond(info, "Testing %d %d %d...", 1, 2, 3);
+	httpd_respond(info, "Testing %d %d %d...\r\n", 1, 2, 3);
+	httpd_respond(info, "URI requested: '%s'\r\n", httpd_getURI(info));
+	httpd_respond(info, "Host: '%s'\r\n", httpd_getHeader(info, "host"));
 }
 
 int main(int argc, char *argv[]) {

@@ -42,9 +42,14 @@ typedef enum httpd_err hte;
 struct httpd_info;
 struct xfer_info;
 
-typedef void (*httpd_callback)(int rxid, struct xfer_info *info);
+typedef void (*httpd_callback)(int rxid, struct xfer_info *info, char *content, int contentLength);
 
 hte httpd_startServer(int listenPort, httpd_callback callback, struct httpd_info **httpd);
+
+char *httpd_getMethod(struct xfer_info *info);
+char *httpd_getURI(struct xfer_info *info);
+char *httpd_getHttpVersion(struct xfer_info *info);
+char *httpd_getHeader(struct xfer_info *info, char *field_name);
 
 hte httpd_respond(struct xfer_info *info, char *format, ...);
 hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap);
