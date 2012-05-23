@@ -49,6 +49,10 @@ void *session_handleConnection(void *_session) {
 	
 	if (http_read(session) != 0) { ret = HTE_READ; goto die; }
 	
+	session->xfer.response->httpVersion = session->xfer.request->httpVersion;
+	session->xfer.response->httpCode = 200;
+	session->xfer.response->httpReason = "Success";
+	
 	httpd->callback(httpd->rxid++, &session->xfer);
 	
 	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
