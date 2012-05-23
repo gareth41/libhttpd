@@ -119,7 +119,7 @@ hte http_parse(struct session_info *session) {
 	while (sol <= eod && req->state != STATE_COMPLETE) {
 		
 		if (req->state == STATE_START ||
-		    req->state == STATE_GETTING_HEADERS) {
+		    req->state == STATE_PARSING_HEADERS) {
 			/* suck in a line --> sol <==> eol */
 			for (eol = sol; *eol != '\r' && *eol != '\n' && eol <= eod; eol++);
 			if (*eol != '\r' && *eol != '\n') { break; }
@@ -146,11 +146,11 @@ hte http_parse(struct session_info *session) {
 				if (eof1 + 2 >= eol) { ret = HTE_PARSE; goto die; }
 				req->httpVersion = eof1 + 2;
 				
-				req->state = STATE_GETTING_HEADERS;
+				req->state = STATE_PARSING_HEADERS;
 				
 				break;
 				
-			case STATE_GETTING_HEADERS:
+			case STATE_PARSING_HEADERS:
 				if (sol == eol) {
 					if (req->data.contentLength > 0) {
 						req->state = STATE_START_CONTENT;
@@ -183,8 +183,8 @@ hte http_parse(struct session_info *session) {
 				break;
 				
 			case STATE_START_CONTENT:
-				req->state = STATE_GETTING_CONTENT;
-			case STATE_GETTING_CONTENT:
+				req->state = STATE_PARSING_CONTENT;
+			case STATE_PARSING_CONTENT:
 				if (!req->data.content) {
 					req->data.content = sol;
 					req->data.contentReceived = eod - sol + 1;
@@ -207,7 +207,7 @@ hte http_parse(struct session_info *session) {
 				goto die;
 		}
 		if (req->state == STATE_ERROR ||
-		    req->state == STATE_GETTING_CONTENT ||
+		    req->state == STATE_PARSING_CONTENT ||
 				req->state == STATE_COMPLETE) break;
 		
 		/* move to next line */
