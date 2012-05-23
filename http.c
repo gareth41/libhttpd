@@ -289,8 +289,8 @@ hte http_respond(struct session_info *session) {
 	/* add the blank line */
 	if ((l = bufcatf(&rsp->headBuf, "\r\n")) <= 0) { ret = HTE_RESPOND; goto die; }
 	
-	if ((ret = buf_send(session->fd, rsp->headBuf)) != HTE_NONE) goto die;
-	if (rsp->buf) if ((ret = buf_send(session->fd, rsp->buf)) != HTE_NONE) goto die;
+	if (rsp->headBuf) if ((ret = buf_send(session->fd, rsp->headBuf)) != HTE_NONE) goto die;
+	if (rsp->buf)     if ((ret = buf_send(session->fd, rsp->buf))     != HTE_NONE) goto die;
 	
 	return HTE_NONE;
 die:

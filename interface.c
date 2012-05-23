@@ -23,6 +23,9 @@
 #include "internal.h"
 #include "interface.h"
 #include "server.h"
+#include "http.h"
+#include "session.h"
+#include "buf.h"
 
 EXPORT hte httpd_startServer(int listenPort, httpd_callback callback, struct httpd_info **_httpd) {
 	struct httpd_info *httpd;
@@ -41,6 +44,29 @@ EXPORT hte httpd_startServer(int listenPort, httpd_callback callback, struct htt
 	}
 	
 	*_httpd = httpd;
+	
+	return HTE_NONE;
+}
+
+EXPORT hte httpd_respond(struct xfer_info *info, char *format, ...) {
+	va_list ap;
+	hte ret;
+	
+	va_start(ap, format);
+	ret = httpd_vrespond(info, format, ap);
+	va_end(ap);
+	
+	return ret;
+}
+EXPORT hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap) {
+	va_list ap2;
+	hte ret;
+	
+	ret = HTE_NONE;
+	
+	va_copy(ap2, ap);
+	if (vbufcatf(&info->response->buf, format, ap2) < 0) ret = HTE_RESPOND;
+	va_end(ap2);
 	
 	return HTE_NONE;
 }

@@ -23,6 +23,8 @@
 
 void client_callback(int rxid, struct xfer_info *info) {
 	printf("New client! %d\n", rxid);
+	
+	httpd_respond(info, "Testing %d %d %d...", 1, 2, 3);
 }
 
 int main(int argc, char *argv[]) {

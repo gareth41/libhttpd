@@ -20,6 +20,8 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#include <stdarg.h>
+
 enum httpd_err {
 	HTE_NONE = 0,
 	HTE_UNKNOWN = -1,
@@ -43,5 +45,8 @@ struct xfer_info;
 typedef void (*httpd_callback)(int rxid, struct xfer_info *info);
 
 hte httpd_startServer(int listenPort, httpd_callback callback, struct httpd_info **httpd);
+
+hte httpd_respond(struct xfer_info *info, char *format, ...);
+hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap);
 
 #endif /* __HTTPD_H */
