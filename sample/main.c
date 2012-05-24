@@ -35,7 +35,7 @@ int main(int argc, char *argv[]) {
 	struct httpd_info *httpd;
 	hte ret;
 
-	if ((ret = httpd_startServer(8080, client_callback, &httpd)) != HTE_NONE) {
+	if ((ret = httpd_startServer(&httpd, 8080, client_callback)) != HTE_NONE) {
 		printf("httpd_startServer() returned %d\n", ret);
 		return 1;
 	}

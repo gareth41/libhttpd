@@ -28,7 +28,7 @@
 #include "session.h"
 #include "buf.h"
 
-EXPORT hte httpd_startServer(int listenPort, httpd_callback callback, struct httpd_info **_httpd) {
+EXPORT hte httpd_startServer(struct httpd_info **_httpd, int listenPort, httpd_callback callback) {
 	struct httpd_info *httpd;
 	hte ret;
 	

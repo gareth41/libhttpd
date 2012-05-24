@@ -44,7 +44,7 @@ struct xfer_info;
 
 typedef void (*httpd_callback)(int rxid, struct xfer_info *info, char *content, int contentLength);
 
-hte httpd_startServer(int listenPort, httpd_callback callback, struct httpd_info **httpd);
+hte httpd_startServer(struct httpd_info **httpd, int listenPort, httpd_callback callback);
 
 char *httpd_getMethod(struct xfer_info *info);
 char *httpd_getURI(struct xfer_info *info);
