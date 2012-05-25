@@ -64,6 +64,8 @@ void *session_handleConnection(void *_session) {
 die:
 	
 	/* some sort of 'an-error-occured' callback? check ret! */
+	fprintf(stderr, "%s:%d %s(): an error occured (%d)\n", __FILE__, __LINE__, __FUNCTION__, ret);
+
 	send(session->fd, err_buf, sizeof(err_buf), MSG_NOSIGNAL);
 	
 done:

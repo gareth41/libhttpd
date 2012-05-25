@@ -44,16 +44,14 @@ void inline http_trimField(unsigned char **start, unsigned char **end) {
 
 hte add_header(struct http_data *data, unsigned char *field_name, unsigned char *field_value) {
 	void *p;
-	int c;
 	
-	c = data->headerc + 1;
-	if ((p = realloc(data->headers, sizeof(*data->headers) * c)) == NULL) return HTE_NOMEM;
+	if ((p = realloc(data->headers, sizeof(*data->headers) * (data->headerc + 1))) == NULL) return HTE_NOMEM;
 	data->headers = p;
 	
 	data->headers[data->headerc].name = field_name;
 	data->headers[data->headerc].value = field_value;
 	
-	data->headerc = c;
+	data->headerc++;
 	
 	return HTE_NONE;
 }

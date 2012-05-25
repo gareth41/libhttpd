@@ -125,6 +125,7 @@ void *srv_listenThread(void *_httpd) {
 	}
 	
 	/* some sort of 'not-listening-anymore' callback? check ret! */
+	fprintf(stderr, "%s:%d %s(): fell out of infinite loop, error %d\n", __FILE__, __LINE__, __FUNCTION__, ret);
 	
 	return NULL;
 }

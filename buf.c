@@ -108,8 +108,6 @@ int vbufcatf(struct buf **buf, char *format, va_list ap) {
 	return l2;
 }
 int nbufcatf(struct buf **buf, char *data, int len) {
-	int i;
-	
 	if (!buf || !data) return -1;
 	if (len <= 0) return 0;
 	
