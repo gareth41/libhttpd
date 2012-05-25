@@ -36,13 +36,14 @@ enum httpd_err {
 	HTE_WRITE,
 	HTE_PARSE,
 	HTE_RESPOND,
+	HTE_CALLBACK,
 };
 typedef enum httpd_err hte;
 
 struct httpd_info;
 struct xfer_info;
 
-typedef void (*httpd_callback)(int rxid, struct xfer_info *info, char *content, int contentLength);
+typedef int (*httpd_callback)(int rxid, struct xfer_info *info, char *content, int contentLength);
 
 hte httpd_startServer(struct httpd_info **httpd, int listenPort, httpd_callback callback);
 
