@@ -74,6 +74,22 @@ EXPORT char *httpd_getHeader(struct xfer_info *info, char *field_name) {
 	return NULL;
 }
 
+EXPORT hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field_value) {
+	struct http_data *data;
+	void *p;
+
+	if (!info || !field_name) return HTE_INVALPARAM;
+
+	data = &info->response->data;
+	if ((p = realloc(data->headers, sizeof(*data->headers) * (data->headerc + 1))) == NULL) return HTE_NOMEM;
+	data->headers = p;
+	data->headers[data->headerc].name = (unsigned char *)field_name;
+	data->headers[data->headerc].value = (unsigned char *)field_value;
+	data->headerc++;
+
+	return HTE_NONE;
+}
+
 EXPORT hte httpd_setHttpCode(struct xfer_info *info, int code, char *reason) {
 	if (!info) return HTE_INVALPARAM;
 	
