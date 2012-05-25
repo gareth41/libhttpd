@@ -10,4 +10,4 @@ clean:
 	rm -rf main
 
 main: main.c
-	gcc $^ -o $@ -I.. -L../lib -lhttpd -lpthread
+	gcc -Wall $^ -o $@ -I.. -L../lib -lhttpd -lpthread

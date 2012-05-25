@@ -19,12 +19,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
+
 #include <httpd.h>
 
 /* content! */
 int page_index(int rxid, struct xfer_info *info, char *content, int contentLength) {
-	char *uri;
-	
 	httpd_respond(info, "Testing %d %d %d...\r\n", 1, 2, 3);
 	httpd_respond(info, "URI requested: '%s'\r\n", httpd_getURI(info));
 	httpd_respond(info, "Host: '%s'\r\n", httpd_getHeader(info, "host"));
@@ -32,7 +33,7 @@ int page_index(int rxid, struct xfer_info *info, char *content, int contentLengt
 	return 0; /* return non-zero for an internal error (500), otherwise build your own error! e.g. 404 */
 }
 
-unsigned char content_favicon[] = {
+char content_favicon[] = {
 	0x42, 0x4D, 0xF6, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x76, 0x00, 0x00, 0x00, 0x28, 0x00,
 	0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00, 0x00, 0x01, 0x00, 0x04, 0x00, 0x00, 0x00,
 	0x00, 0x00, 0x80, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
@@ -57,7 +58,7 @@ unsigned char content_favicon[] = {
 struct page {
 	char *uri;
 	httpd_callback callback;
-	unsigned char *content;
+	char *content;
 	size_t contentLength;
 } pageList[] = {
 	{ "/", page_index },
