@@ -259,6 +259,7 @@ hte http_respond(struct session_info *session) {
 	hte ret;
 	int l, i;
 	int gotContentLength = 0;
+	char *reason;
 	
 	struct http_response *rsp;
 	
@@ -267,8 +268,56 @@ hte http_respond(struct session_info *session) {
 	if (!session || !session->xfer.response) return HTE_INVALPARAM;
 	rsp = session->xfer.response;
 	
+	reason = (char*)rsp->httpReason;
+	if (!reason) {
+		/* if we don't have a reason string, look it up */
+		switch (rsp->httpCode) {
+			case 100: reason = "Continue";                        break;
+			case 101: reason = "Switching Protocols";             break;
+			case 200: reason = "OK";                              break;
+			case 201: reason = "Created";                         break;
+			case 202: reason = "Accepted";                        break;
+			case 203: reason = "Non-Authoritative Information";   break;
+			case 204: reason = "No Content";                      break;
+			case 205: reason = "Reset Content";                   break;
+			case 206: reason = "Partial Content";                 break;
+			case 300: reason = "Multiple Choices";                break;
+			case 301: reason = "Moved Permanently";               break;
+			case 302: reason = "Found";                           break;
+			case 303: reason = "See Other";                       break;
+			case 304: reason = "Not Modified";                    break;
+			case 305: reason = "Use Proxy";                       break;
+			case 307: reason = "Temporary Redirect";              break;
+			case 400: reason = "Bad Request";                     break;
+			case 401: reason = "Unauthorized";                    break;
+			case 402: reason = "Payment Required";                break;
+			case 403: reason = "Forbidden";                       break;
+			case 404: reason = "Not Found";                       break;
+			case 405: reason = "Method Not Allowed";              break;
+			case 406: reason = "Not Acceptable";                  break;
+			case 407: reason = "Proxy Authentication Required";   break;
+			case 408: reason = "Request Time-out";                break;
+			case 409: reason = "Conflict";                        break;
+			case 410: reason = "Gone";                            break;
+			case 411: reason = "Length Required";                 break;
+			case 412: reason = "Precondition Failed";             break;
+			case 413: reason = "Request Entity Too Large";        break;
+			case 414: reason = "Request-URI Too Large";           break;
+			case 415: reason = "Unsupported Media Type";          break;
+			case 416: reason = "Requested range not satisfiable"; break;
+			case 417: reason = "Expectation Failed";              break;
+			case 500: reason = "Internal Server Error";           break;
+			case 501: reason = "Not Implemented";                 break;
+			case 502: reason = "Bad Gateway";                     break;
+			case 503: reason = "Service Unavailable";             break;
+			case 504: reason = "Gateway Time-out";                break;
+			case 505: reason = "HTTP Version not supported";      break;
+			default:  reason = "Unknown";                         break;
+		}
+	}
+	
 	/* add the HTTP status line */
-	if ((l = bufcatf(&rsp->headBuf, "%s %d %s\r\n", rsp->httpVersion, rsp->httpCode, rsp->httpReason)) <= 0) { ret = HTE_RESPOND; goto die; }
+	if ((l = bufcatf(&rsp->headBuf, "%s %d %s\r\n", rsp->httpVersion, rsp->httpCode, reason)) <= 0) { ret = HTE_RESPOND; goto die; }
 	
 	/* add the headers */
 	for (i = 0; i < rsp->data.headerc; i++) {
