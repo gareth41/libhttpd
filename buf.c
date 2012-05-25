@@ -100,12 +100,37 @@ int vbufcatf(struct buf **buf, char *format, va_list ap) {
 	l2 = vsnprintf((char*)&((*buf)->data[(*buf)->next]), l, format, ap2);
 	va_end(ap2);
 	if (l2 <= 0) return l2;
-	l2++; /* <-- space for the nul */
 	
-	if (l != l2) return -3;
+	/*            v-- don't forget that nul */
+	if (l != l2 + 1) return -3;
 	
-	(*buf)->next += l2 - 1;
+	(*buf)->next += l2;
 	return l2;
+}
+int nbufcatf(struct buf **buf, char *data, int len) {
+	int i;
+	
+	if (!buf || !data) return -1;
+	if (len <= 0) return 0;
+	
+	if (*buf == NULL || (*buf)->next + len + 1 > (*buf)->len) {
+		void *p;
+		int n;
+		
+		if (*buf != NULL) {
+			n = (*buf)->next;
+		} else {
+			n = 0;
+		}
+		
+		if ((p = buf_alloc(*buf, n + len)) == NULL) return -2;
+		*buf = p;
+	}
+	
+	memcpy(&((*buf)->data[(*buf)->next]), data, len);
+	(*buf)->next += len;
+	
+	return len;
 }
 
 hte buf_send(int fd, struct buf *buf) {

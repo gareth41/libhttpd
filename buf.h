@@ -35,6 +35,7 @@ void buf_free(struct buf *buf);
 
 int bufcatf(struct buf **buf, char *format, ...);
 int vbufcatf(struct buf **buf, char *format, va_list ap);
+int nbufcatf(struct buf **buf, char *data, int len);
 
 hte buf_send(int fd, struct buf *buf);
 
