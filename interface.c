@@ -74,6 +74,15 @@ EXPORT char *httpd_getHeader(struct xfer_info *info, char *field_name) {
 	return NULL;
 }
 
+EXPORT hte httpd_setHttpCode(struct xfer_info *info, int code, char *reason) {
+	if (!info) return HTE_INVALPARAM;
+	
+	info->response->httpCode = code;
+	info->response->httpReason = (unsigned char *)reason;
+	
+	return HTE_NONE;
+}
+
 EXPORT hte httpd_respond(struct xfer_info *info, char *format, ...) {
 	va_list ap;
 	hte ret;
@@ -97,6 +106,18 @@ EXPORT hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap) {
 	va_copy(ap2, ap);
 	if (vbufcatf(&info->response->buf, format, ap2) < 0) ret = HTE_RESPOND;
 	va_end(ap2);
+	
+	return ret;
+}
+EXPORT hte httpd_nrespond(struct xfer_info *info, char *data, int len) {
+	hte ret;
+	
+	if (!info || !data) return HTE_INVALPARAM;
+	if (len == 0) return HTE_NONE;
+	
+	ret = HTE_NONE;
+	
+	if (nbufcatf(&info->response->buf, data, len) != len) ret = HTE_RESPOND;
 	
 	return ret;
 }
