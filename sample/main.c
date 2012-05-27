@@ -24,8 +24,35 @@
 
 #include <httpd.h>
 
+const char css_file[] = "/style.css";
+const char test_file[] = "/test";
+
 /* content! */
 int page_index(int rxid, struct session_info *session, char *content, int contentLength) {
+	httpd_addHeader(session, "Content-Type", "text/html");
+	
+	httpd_respond(session, "<html><head>");
+	httpd_respond(session, "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", css_file);
+	httpd_respond(session, "</head><body>");
+	httpd_respond(session, "<p>Hello! would you like a <a href=\"%s\">link</a>?</p>", test_file);
+	httpd_respond(session, "</body></html>");
+	
+	return 0; /* return non-zero for an internal error (500), otherwise build your own error! e.g. 404 */
+}
+
+int page_css(int rxid, struct session_info *session, char *content, int contentLength) {
+	httpd_addHeader(session, "Content-Type", "text/css");
+	
+	httpd_respond(session, "html { font-family: sans-serif; }");
+	httpd_respond(session, "p { font-size: 12pt; padding-left: 25px; padding-top: 20px; }");
+	httpd_respond(session, "a { color: #384; }");
+	httpd_respond(session, "a:hover { color: #5C6; }");
+	
+	
+	return 0;
+}
+
+int page_test(int rxid, struct session_info *session, char *content, int contentLength) {
 	httpd_addHeader(session, "Content-Type", "text/plain");
 	
 	httpd_respond(session, "Testing %d %d %d...\r\n", 1, 2, 3);
@@ -36,7 +63,7 @@ int page_index(int rxid, struct session_info *session, char *content, int conten
 	
 	httpd_respond(session, "This line was not %s\r\n", "buffered");
 	
-	return 0; /* return non-zero for an internal error (500), otherwise build your own error! e.g. 404 */
+	return 0;
 }
 
 char content_favicon[] = {
@@ -62,7 +89,7 @@ char content_favicon[] = {
 
 /* content list */
 struct page {
-	char *uri;
+	const char *uri;
 	
 	/* if a callback is registered, then it is executed */
 	httpd_callback callback;
@@ -73,7 +100,9 @@ struct page {
 	char *mimeType;
 	
 } pageList[] = {
-	{ "/", page_index },
+	{ "/",            page_index },
+	{ css_file,       page_css   },
+	{ test_file,      page_test  },
 	{ "/favicon.ico", NULL, content_favicon, sizeof(content_favicon), "image/x-icon"}
 };
 
