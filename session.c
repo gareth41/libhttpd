@@ -50,14 +50,18 @@ void *session_handleConnection(void *_session) {
 		memset(session->xfer.response, 0, sizeof(*session->xfer.response));
 	}
 	
+	/* read request */
 	if (http_read(session) != 0) { ret = HTE_READ; goto die; }
 	
+	/* prepare asumptions about response */
 	session->xfer.response->httpVersion = session->xfer.request->httpVersion;
 	session->xfer.response->httpCode = 200;
 	session->xfer.response->httpReason = (unsigned char*)"Success";
 	
+	/* run the callback */
 	if (httpd->callback(httpd->rxid++, session, (char*)session->xfer.request->buf->data, session->xfer.request->buf->len) != 0) { ret = HTE_CALLBACK; goto die; }
 	
+	/* send the response */
 	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
 	
 	goto done;

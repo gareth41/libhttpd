@@ -25,12 +25,12 @@
 #include <httpd.h>
 
 /* content! */
-int page_index(int rxid, struct xfer_info *info, char *content, int contentLength) {
-	httpd_addHeader(info, "Content-Type", "text/plain");
+int page_index(int rxid, struct session_info *session, char *content, int contentLength) {
+	httpd_addHeader(session, "Content-Type", "text/plain");
 	
-	httpd_respond(info, "Testing %d %d %d...\r\n", 1, 2, 3);
-	httpd_respond(info, "URI requested: '%s'\r\n", httpd_getURI(info));
-	httpd_respond(info, "Host: '%s'\r\n", httpd_getHeader(info, "host"));
+	httpd_respond(session, "Testing %d %d %d...\r\n", 1, 2, 3);
+	httpd_respond(session, "URI requested: '%s'\r\n", httpd_getURI(session));
+	httpd_respond(session, "Host: '%s'\r\n", httpd_getHeader(session, "host"));
 	
 	return 0; /* return non-zero for an internal error (500), otherwise build your own error! e.g. 404 */
 }
@@ -59,22 +59,28 @@ char content_favicon[] = {
 /* content list */
 struct page {
 	char *uri;
+	
+	/* if a callback is registered, then it is executed */
 	httpd_callback callback;
+	
+	/* if not, then if there is static content registered, then it is sent. mimeType is optional */
 	char *content;
 	size_t contentLength;
+	char *mimeType;
+	
 } pageList[] = {
 	{ "/", page_index },
-	{ "/favicon.ico", NULL, content_favicon, sizeof(content_favicon)}
+	{ "/favicon.ico", NULL, content_favicon, sizeof(content_favicon), "image/x-icon"}
 };
 
 /* ########################################################################## */
 
 /* content lookup */
-int client_callback(int rxid, struct xfer_info *info, char *content, int contentLength) {
+int client_callback(int rxid, struct session_info *session, char *content, int contentLength) {
 	char *uri;
 	int i, l;
 	
-	if ((uri = httpd_getURI(info)) == NULL) return 1; /* return non-zero for an internal error (500) */
+	if ((uri = httpd_getURI(session)) == NULL) return 1; /* return non-zero for an internal error (500) */
 	
 	l = sizeof(pageList) / sizeof(*pageList);
 	for (i = 0; i < l; i++) {
@@ -82,22 +88,24 @@ int client_callback(int rxid, struct xfer_info *info, char *content, int content
 		
 		/* use a callback if possible */
 		if (pageList[i].callback != NULL) {
-			return pageList[i].callback(rxid, info, content, contentLength);
+			return pageList[i].callback(rxid, session, content, contentLength);
 			
 		/* otherwise use static content */
 		} else if (pageList[i].content != NULL && pageList[i].contentLength > 0) {
-			httpd_addHeader(info, "Content-Length", "%d", pageList[i].contentLength);
-			httpd_nrespond(info, pageList[i].content, pageList[i].contentLength);
+			if (pageList[i].mimeType != NULL) httpd_addHeader(session, "Content-Type", "%s", pageList[i].mimeType);
+			httpd_addHeader(session, "Content-Length", "%d", pageList[i].contentLength);
+			httpd_flush(session);
+			httpd_nrespond(session, pageList[i].content, pageList[i].contentLength);
 			
-		/* otherwise it's not implemented! (501) */
+		/* otherwise it's not implemented! (501 - uri is registerd, but has no content) */
 		} else {
-			httpd_setHttpCode(info, 501, NULL);
+			httpd_setHttpCode(session, 501, NULL);
 		}
 		
 		return 0;
 	}
 	
-	httpd_setHttpCode(info, 404, NULL);
+	httpd_setHttpCode(session, 404, NULL);
 	
 	return 0; 
 }

@@ -51,21 +51,21 @@ EXPORT hte httpd_startServer(struct httpd_info **_httpd, int listenPort, httpd_c
 }
 
 EXPORT char *httpd_getMethod(struct session_info *session) {
-	if (!session) return HTE_INVALPARAM;
+	if (!session) return NULL;
 	return (char *)session->xfer.request->method;
 }
 EXPORT char *httpd_getURI(struct session_info *session) {
-	if (!session) return HTE_INVALPARAM;
+	if (!session) return NULL;
 	return (char *)session->xfer.request->uri;
 }
 EXPORT char *httpd_getHttpVersion(struct session_info *session) {
-	if (!session) return HTE_INVALPARAM;
+	if (!session) return NULL;
 	return (char *)session->xfer.request->httpVersion;
 }
 EXPORT char *httpd_getHeader(struct session_info *session, char *field_name) {
 	int i;
 	struct http_data *data;
-	if (!session || !field_name) return HTE_INVALPARAM;
+	if (!session || !field_name) return NULL;
 	data = &session->xfer.request->data;
 	for (i = 0; i < data->headerc; i++) {
 		if (data->headers[i].name == NULL) continue;
@@ -184,6 +184,24 @@ EXPORT hte httpd_nrespond(struct session_info *session, char *data, int len) {
 	ret = HTE_NONE;
 	
 	if (nbufcatf(&session->xfer.response->buf, data, len) != len) ret = HTE_RESPOND;
+	
+	return ret;
+}
+
+EXPORT hte httpd_flush(struct session_info *session) {
+	hte ret;
+	void *p;
+	
+	if (!session) return HTE_INVALPARAM;
+	
+	ret = HTE_NONE;
+	if (http_respond(session) != HTE_NONE) ret = HTE_RESPOND;
+	
+	if ((p = buf_alloc(session->xfer.response->buf, 1)) == NULL) return HTE_NOMEM;
+	session->xfer.response->buf = p;
+	session->xfer.response->buf->pos = 0;
+	session->xfer.response->buf->next = 0;
+	session->xfer.response->buf->fd = session->fd;
 	
 	return ret;
 }

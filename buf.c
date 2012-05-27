@@ -20,6 +20,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <stdarg.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -105,11 +106,22 @@ int vbufcatf(struct buf **buf, char *format, va_list ap) {
 	if (l != l2 + 1) return -3;
 	
 	(*buf)->next += l2;
+	if ((*buf) && (*buf)->fd != 0) {
+		l2 = write((*buf)->fd, (*buf)->data, (*buf)->next);
+		(*buf)->next = 0;
+	}
+	
 	return l2;
 }
 int nbufcatf(struct buf **buf, char *data, int len) {
 	if (!buf || !data) return -1;
 	if (len <= 0) return 0;
+	
+	if ((*buf) && (*buf)->fd != 0 && (*buf)->next == 0) {
+		len = write((*buf)->fd, data, len);
+		(*buf)->next = 0;
+		return len;
+	}
 	
 	if (*buf == NULL || (*buf)->next + len + 1 > (*buf)->len) {
 		void *p;
@@ -125,8 +137,13 @@ int nbufcatf(struct buf **buf, char *data, int len) {
 		*buf = p;
 	}
 	
-	memcpy(&((*buf)->data[(*buf)->next]), data, len);
-	(*buf)->next += len;
+	if ((*buf) && (*buf)->fd != 0) {
+		len = write((*buf)->fd, data, len);
+		(*buf)->next = 0;
+	} else {
+		memcpy(&((*buf)->data[(*buf)->next]), data, len);
+		(*buf)->next += len;
+	}
 	
 	return len;
 }

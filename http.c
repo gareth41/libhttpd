@@ -265,6 +265,7 @@ hte http_respond(struct session_info *session) {
 	
 	if (!session || !session->xfer.response) return HTE_INVALPARAM;
 	rsp = session->xfer.response;
+	if (rsp->buf != NULL && rsp->buf->fd != 0) return HTE_NONE;
 	
 	reason = (char*)rsp->httpReason;
 	if (!reason) {

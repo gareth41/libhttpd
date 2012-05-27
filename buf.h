@@ -26,6 +26,8 @@ struct buf {
 	size_t pos; /* for the user, it isn't used in here! */
 	size_t next; /* for the user, it isn't used in here! */
 	
+	int fd; /* if this is non-Zero, then writing to the buffer is diverted to this file handle instead */
+	
 	size_t len; /* if len is zero, you should NOT use the byte that's already allocated */
 	unsigned char data[1];
 };

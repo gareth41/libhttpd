@@ -62,4 +62,9 @@ hte httpd_respond(struct session_info *session, char *format, ...);
 hte httpd_vrespond(struct session_info *session, char *format, va_list ap);
 hte httpd_nrespond(struct session_info *session, char *data, int len);
 
+/* calling this function allows you to respond with a large amount of data
+   this function will send any buffered headers to the client, and any existing buffered data
+	 after calling this function, data will not be buffered, it will be sent directly to the client */
+hte httpd_flush(struct session_info *session);
+
 #endif /* __HTTPD_H */
