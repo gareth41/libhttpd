@@ -79,9 +79,24 @@ done:
 		free(session->xfer.request);
 	}
 	if (session->xfer.response) {
+		
 		if (session->xfer.response->headBuf) buf_free(session->xfer.response->headBuf);
 		if (session->xfer.response->buf) buf_free(session->xfer.response->buf);
-		if (session->xfer.response->data.headers) free(session->xfer.response->data.headers);
+		
+		if (session->xfer.response->data.headers) {
+			int i;
+			struct http_data *htdata;
+			struct http_header *header;
+			htdata = &session->xfer.response->data;
+			
+			for (i = 0; i < htdata->headerc; i++) {
+				header = &htdata->headers[i];
+				if (header->value == NULL) continue;
+				if (header->valueFree == 0) continue;
+				free(header->value);
+			}
+			free(session->xfer.response->data.headers);
+		}
 		free(session->xfer.response);
 	}
 	

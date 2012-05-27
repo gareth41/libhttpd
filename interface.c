@@ -19,6 +19,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdarg.h>
 #include <string.h>
 
 #include "internal.h"
@@ -74,17 +75,66 @@ EXPORT char *httpd_getHeader(struct xfer_info *info, char *field_name) {
 	return NULL;
 }
 
-EXPORT hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field_value) {
+EXPORT hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field_value_format, ...) {
 	struct http_data *data;
 	void *p;
+	int i;
+	char *field_value;
+	int field_valueFree;
 
 	if (!info || !field_name) return HTE_INVALPARAM;
+	
+	field_value = NULL;
+	field_valueFree = 0;
+	
+	if (field_value_format != NULL) {
+		for (i = 0; field_value_format[i] != '\0'; i++) {
+			if (field_value_format[i] == '%') break;
+		}
+		
+		if (field_value_format[i] == '\0') {
+			field_value = field_value_format;
+		} else {
+			va_list ap;
+			int len;
+			
+			va_start(ap, field_value_format);
+			len = vsnprintf(NULL, 0, field_value_format, ap);
+			va_end(ap);
+			
+			if (len > 0) {
+				char *p;
+				int len2;
+				
+				if ((p = malloc(sizeof(char) * (len + 1))) == NULL) return HTE_NOMEM;
+				
+				va_start(ap, field_value_format);
+				len2 = vsnprintf(p, len + 1, field_value_format, ap);
+				va_end(ap);
+				
+				if (len != len2) {
+					free(p);
+					return HTE_UNKNOWN;
+				}
+				
+				field_value = p;
+				field_valueFree = 1;
+			}
+		}
+	}
 
 	data = &info->response->data;
-	if ((p = realloc(data->headers, sizeof(*data->headers) * (data->headerc + 1))) == NULL) return HTE_NOMEM;
+	if ((p = realloc(data->headers, sizeof(*data->headers) * (data->headerc + 1))) == NULL) {
+		if (field_value != NULL && field_valueFree) free(field_value);
+		return HTE_NOMEM;
+	}
 	data->headers = p;
+	
+	memset(&(data->headers[data->headerc]), 0, sizeof(data->headers[data->headerc]));
 	data->headers[data->headerc].name = (unsigned char *)field_name;
 	data->headers[data->headerc].value = (unsigned char *)field_value;
+	data->headers[data->headerc].valueFree = field_valueFree;
+	
 	data->headerc++;
 
 	return HTE_NONE;

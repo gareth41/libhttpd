@@ -26,6 +26,8 @@
 
 /* content! */
 int page_index(int rxid, struct xfer_info *info, char *content, int contentLength) {
+	httpd_addHeader(info, "Content-Type", "text/plain");
+	
 	httpd_respond(info, "Testing %d %d %d...\r\n", 1, 2, 3);
 	httpd_respond(info, "URI requested: '%s'\r\n", httpd_getURI(info));
 	httpd_respond(info, "Host: '%s'\r\n", httpd_getHeader(info, "host"));
@@ -84,6 +86,7 @@ int client_callback(int rxid, struct xfer_info *info, char *content, int content
 			
 		/* otherwise use static content */
 		} else if (pageList[i].content != NULL && pageList[i].contentLength > 0) {
+			httpd_addHeader(info, "Content-Length", "%d", pageList[i].contentLength);
 			httpd_nrespond(info, pageList[i].content, pageList[i].contentLength);
 			
 		/* otherwise it's not implemented! (501) */

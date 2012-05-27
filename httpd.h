@@ -56,7 +56,7 @@ char *httpd_getHeader(struct xfer_info *info, char *field_name);
    if you DO give a 'reason' string, it should NOT need to be free()'d */
 hte httpd_setHttpCode(struct xfer_info *info, int code, char *reason);
 
-hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field_value);
+hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field_value_format, ...);
 
 hte httpd_respond(struct xfer_info *info, char *format, ...);
 hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap);

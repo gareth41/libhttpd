@@ -34,6 +34,7 @@ enum http_state {
 struct http_header {
 	unsigned char *name;
 	unsigned char *value;
+	int valueFree;
 };
 
 struct http_data {
