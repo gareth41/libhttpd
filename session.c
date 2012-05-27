@@ -62,7 +62,7 @@ void *session_handleConnection(void *_session) {
 	if (httpd->callback(httpd->rxid++, session, (char*)session->xfer.request->buf->data, session->xfer.request->buf->len) != 0) { ret = HTE_CALLBACK; goto die; }
 	
 	/* send the response */
-	if (http_respond(session) != 0) { ret = HTE_RESPOND; goto die; }
+	if (http_respond(session, 1) != 0) { ret = HTE_RESPOND; goto die; }
 	
 	goto done;
 die:

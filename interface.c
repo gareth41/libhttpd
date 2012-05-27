@@ -195,7 +195,7 @@ EXPORT hte httpd_flush(struct session_info *session) {
 	if (!session) return HTE_INVALPARAM;
 	
 	ret = HTE_NONE;
-	if (http_respond(session) != HTE_NONE) ret = HTE_RESPOND;
+	if (http_respond(session, 0) != HTE_NONE) ret = HTE_RESPOND;
 	
 	if ((p = buf_alloc(session->xfer.response->buf, 1)) == NULL) return HTE_NOMEM;
 	session->xfer.response->buf = p;

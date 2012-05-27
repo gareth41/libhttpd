@@ -32,6 +32,10 @@ int page_index(int rxid, struct session_info *session, char *content, int conten
 	httpd_respond(session, "URI requested: '%s'\r\n", httpd_getURI(session));
 	httpd_respond(session, "Host: '%s'\r\n", httpd_getHeader(session, "host"));
 	
+	httpd_flush(session);
+	
+	httpd_respond(session, "This line was not %s\r\n", "buffered");
+	
 	return 0; /* return non-zero for an internal error (500), otherwise build your own error! e.g. 404 */
 }
 

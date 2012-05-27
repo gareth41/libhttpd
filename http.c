@@ -253,7 +253,7 @@ hte http_parse_fixup(struct session_info *session) {
 	return HTE_NONE;
 }
 
-hte http_respond(struct session_info *session) {
+hte http_respond(struct session_info *session, int generate_content_length) {
 	hte ret;
 	int l, i;
 	int gotContentLength = 0;
@@ -328,7 +328,7 @@ hte http_respond(struct session_info *session) {
 			if ((l = bufcatf(&rsp->headBuf, "%s: %s\r\n", rsp->data.headers[i].name, rsp->data.headers[i].value)) <= 0) { ret = HTE_RESPOND; goto die; }
 		}
 	}
-	if (gotContentLength == 0) {
+	if (gotContentLength == 0 && generate_content_length != 0) {
 		if (rsp->buf) {
 			if ((l = bufcatf(&rsp->headBuf, "Content-Length: %d\r\n", rsp->buf->len)) <= 0) { ret = HTE_RESPOND; goto die; }
 		} else {
