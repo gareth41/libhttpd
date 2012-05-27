@@ -50,23 +50,23 @@ EXPORT hte httpd_startServer(struct httpd_info **_httpd, int listenPort, httpd_c
 	return HTE_NONE;
 }
 
-EXPORT char *httpd_getMethod(struct xfer_info *info) {
-	if (!info) return HTE_INVALPARAM;
-	return (char *)info->request->method;
+EXPORT char *httpd_getMethod(struct session_info *session) {
+	if (!session) return HTE_INVALPARAM;
+	return (char *)session->xfer.request->method;
 }
-EXPORT char *httpd_getURI(struct xfer_info *info) {
-	if (!info) return HTE_INVALPARAM;
-	return (char *)info->request->uri;
+EXPORT char *httpd_getURI(struct session_info *session) {
+	if (!session) return HTE_INVALPARAM;
+	return (char *)session->xfer.request->uri;
 }
-EXPORT char *httpd_getHttpVersion(struct xfer_info *info) {
-	if (!info) return HTE_INVALPARAM;
-	return (char *)info->request->httpVersion;
+EXPORT char *httpd_getHttpVersion(struct session_info *session) {
+	if (!session) return HTE_INVALPARAM;
+	return (char *)session->xfer.request->httpVersion;
 }
-EXPORT char *httpd_getHeader(struct xfer_info *info, char *field_name) {
+EXPORT char *httpd_getHeader(struct session_info *session, char *field_name) {
 	int i;
 	struct http_data *data;
-	if (!info || !field_name) return HTE_INVALPARAM;
-	data = &info->request->data;
+	if (!session || !field_name) return HTE_INVALPARAM;
+	data = &session->xfer.request->data;
 	for (i = 0; i < data->headerc; i++) {
 		if (data->headers[i].name == NULL) continue;
 		if (strcasecmp((char*)data->headers[i].name, field_name)) continue;
@@ -75,14 +75,14 @@ EXPORT char *httpd_getHeader(struct xfer_info *info, char *field_name) {
 	return NULL;
 }
 
-EXPORT hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field_value_format, ...) {
+EXPORT hte httpd_addHeader(struct session_info *session, char *field_name, char *field_value_format, ...) {
 	struct http_data *data;
 	void *p;
 	int i;
 	char *field_value;
 	int field_valueFree;
 
-	if (!info || !field_name) return HTE_INVALPARAM;
+	if (!session || !field_name) return HTE_INVALPARAM;
 	
 	field_value = NULL;
 	field_valueFree = 0;
@@ -123,7 +123,7 @@ EXPORT hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field
 		}
 	}
 
-	data = &info->response->data;
+	data = &session->xfer.response->data;
 	if ((p = realloc(data->headers, sizeof(*data->headers) * (data->headerc + 1))) == NULL) {
 		if (field_value != NULL && field_valueFree) free(field_value);
 		return HTE_NOMEM;
@@ -140,50 +140,50 @@ EXPORT hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field
 	return HTE_NONE;
 }
 
-EXPORT hte httpd_setHttpCode(struct xfer_info *info, int code, char *reason) {
-	if (!info) return HTE_INVALPARAM;
+EXPORT hte httpd_setHttpCode(struct session_info *session, int code, char *reason) {
+	if (!session) return HTE_INVALPARAM;
 	
-	info->response->httpCode = code;
-	info->response->httpReason = (unsigned char *)reason;
+	session->xfer.response->httpCode = code;
+	session->xfer.response->httpReason = (unsigned char *)reason;
 	
 	return HTE_NONE;
 }
 
-EXPORT hte httpd_respond(struct xfer_info *info, char *format, ...) {
+EXPORT hte httpd_respond(struct session_info *session, char *format, ...) {
 	va_list ap;
 	hte ret;
 	
-	if (!info || !format) return HTE_INVALPARAM;
+	if (!session || !format) return HTE_INVALPARAM;
 	
 	va_start(ap, format);
-	ret = httpd_vrespond(info, format, ap);
+	ret = httpd_vrespond(session, format, ap);
 	va_end(ap);
 	
 	return ret;
 }
-EXPORT hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap) {
+EXPORT hte httpd_vrespond(struct session_info *session, char *format, va_list ap) {
 	va_list ap2;
 	hte ret;
 	
-	if (!info || !format) return HTE_INVALPARAM;
+	if (!session || !format) return HTE_INVALPARAM;
 	
 	ret = HTE_NONE;
 	
 	va_copy(ap2, ap);
-	if (vbufcatf(&info->response->buf, format, ap2) < 0) ret = HTE_RESPOND;
+	if (vbufcatf(&session->xfer.response->buf, format, ap2) < 0) ret = HTE_RESPOND;
 	va_end(ap2);
 	
 	return ret;
 }
-EXPORT hte httpd_nrespond(struct xfer_info *info, char *data, int len) {
+EXPORT hte httpd_nrespond(struct session_info *session, char *data, int len) {
 	hte ret;
 	
-	if (!info || !data) return HTE_INVALPARAM;
+	if (!session || !data) return HTE_INVALPARAM;
 	if (len == 0) return HTE_NONE;
 	
 	ret = HTE_NONE;
 	
-	if (nbufcatf(&info->response->buf, data, len) != len) ret = HTE_RESPOND;
+	if (nbufcatf(&session->xfer.response->buf, data, len) != len) ret = HTE_RESPOND;
 	
 	return ret;
 }

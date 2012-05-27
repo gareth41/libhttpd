@@ -41,25 +41,25 @@ enum httpd_err {
 typedef enum httpd_err hte;
 
 struct httpd_info;
-struct xfer_info;
+struct session_info;
 
-typedef int (*httpd_callback)(int rxid, struct xfer_info *info, char *content, int contentLength);
+typedef int (*httpd_callback)(int rxid, struct session_info *session, char *content, int contentLength);
 
 hte httpd_startServer(struct httpd_info **httpd, int listenPort, httpd_callback callback);
 
-char *httpd_getMethod(struct xfer_info *info);
-char *httpd_getURI(struct xfer_info *info);
-char *httpd_getHttpVersion(struct xfer_info *info);
-char *httpd_getHeader(struct xfer_info *info, char *field_name);
+char *httpd_getMethod(struct session_info *session);
+char *httpd_getURI(struct session_info *session);
+char *httpd_getHttpVersion(struct session_info *session);
+char *httpd_getHeader(struct session_info *session, char *field_name);
 
 /* if you don't give a 'reason' string, it will be looked up
    if you DO give a 'reason' string, it should NOT need to be free()'d */
-hte httpd_setHttpCode(struct xfer_info *info, int code, char *reason);
+hte httpd_setHttpCode(struct session_info *session, int code, char *reason);
 
-hte httpd_addHeader(struct xfer_info *info, char *field_name, char *field_value_format, ...);
+hte httpd_addHeader(struct session_info *session, char *field_name, char *field_value_format, ...);
 
-hte httpd_respond(struct xfer_info *info, char *format, ...);
-hte httpd_vrespond(struct xfer_info *info, char *format, va_list ap);
-hte httpd_nrespond(struct xfer_info *info, char *data, int len);
+hte httpd_respond(struct session_info *session, char *format, ...);
+hte httpd_vrespond(struct session_info *session, char *format, va_list ap);
+hte httpd_nrespond(struct session_info *session, char *data, int len);
 
 #endif /* __HTTPD_H */
