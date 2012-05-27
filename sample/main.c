@@ -26,6 +26,7 @@
 
 const char css_file[] = "/style.css";
 const char test_file[] = "/test";
+const char img_file[] = "/smile.gif";
 
 /* content! */
 int page_index(int rxid, struct session_info *session, char *content, int contentLength) {
@@ -35,6 +36,7 @@ int page_index(int rxid, struct session_info *session, char *content, int conten
 	httpd_respond(session, "<link href=\"%s\" rel=\"stylesheet\" type=\"text/css\">", css_file);
 	httpd_respond(session, "</head><body>");
 	httpd_respond(session, "<p>Hello! would you like a <a href=\"%s\">link</a>?</p>", test_file);
+	httpd_respond(session, "<img class=\"smile\" src=\"%s\"/>", img_file);
 	httpd_respond(session, "</body></html>");
 	
 	return 0; /* return non-zero for an internal error (500), otherwise build your own error! e.g. 404 */
@@ -47,6 +49,7 @@ int page_css(int rxid, struct session_info *session, char *content, int contentL
 	httpd_respond(session, "p { font-size: 12pt; padding-left: 25px; padding-top: 20px; }");
 	httpd_respond(session, "a { color: #384; }");
 	httpd_respond(session, "a:hover { color: #5C6; }");
+	httpd_respond(session, "img.smile { padding-left:100px; }");
 	
 	
 	return 0;
@@ -85,6 +88,8 @@ char content_favicon[] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
+#include "smile.c"
+
 /* ########################################################################## */
 
 /* content list */
@@ -103,7 +108,8 @@ struct page {
 	{ "/",            page_index },
 	{ css_file,       page_css   },
 	{ test_file,      page_test  },
-	{ "/favicon.ico", NULL, content_favicon, sizeof(content_favicon), "image/x-icon"}
+	{ img_file,       NULL, content_smile,   sizeof(content_smile),   "image/gif"},
+	{ "/favicon.ico", NULL, content_favicon, sizeof(content_favicon), "image/x-icon"},
 };
 
 /* ########################################################################## */
