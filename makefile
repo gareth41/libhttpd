@@ -1,4 +1,4 @@
-CROSS_TOOL=
+CROSS_COMPILE=
 
 SRCS=$(wildcard *.c)
 
@@ -22,11 +22,12 @@ BUILDDIR=.build
 LIB_VER=$(VER_MAJ).$(VER_MIN).$(VER_REV)
 OBJS=$(addprefix $(BUILDDIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
-GCC=$(CROSS_TOOL)gcc
+GCC=$(CROSS_COMPILE)gcc
+AR=$(CROSS_COMPILE)ar
 
 #--------#
 
-all: $(LIBDIR)/$(LIBNAME).so
+all: $(LIBDIR)/$(LIBNAME).so $(LIBDIR)/$(LIBNAME).a
 
 new: clean
 	$(MAKE) --no-print-directory all
@@ -48,6 +49,14 @@ $(LIBDIR)/$(LIBNAME).so: .$(LIBDIR).dir $(LIBDIR)/$(LIBNAME).so.$(LIB_VER)
 
 $(LIBDIR)/$(LIBNAME).so.$(LIB_VER): .$(LIBDIR).dir $(OBJS) makefile
 	$(GCC) --shared -Wl,-soname,$(LIBNAME).so.$(LIB_VER) $(CLINKS) $(filter %.o,$^) -o $@
+
+#--------#
+
+$(LIBDIR)/$(LIBNAME).a: .$(LIBDIR).dir $(LIBDIR)/$(LIBNAME).a.$(LIB_VER)
+	@if [ ! -e $@ ]; then CMD="ln -sf `basename $(filter %.a.$(LIB_VER),$^)` $@"; echo $${CMD}; $${CMD}; fi
+
+$(LIBDIR)/$(LIBNAME).a.$(LIB_VER): .$(LIBDIR).dir $(OBJS) makefile
+	$(AR) rcs $@ $(filter %.o,$^)
 
 #--------#
 
