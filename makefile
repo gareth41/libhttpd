@@ -1,8 +1,13 @@
 CROSS_COMPILE=
+SYS_ROOT?=
+
+#--------#
 
 SRCS=$(wildcard *.c)
 
 LIBNAME=libhttpd
+SYS_LIBDIR=$(SYS_ROOT)/usr/lib
+SYS_INCDIR=$(SYS_ROOT)/usr/include
 
 VER_MAJ=0
 VER_MIN=0
@@ -41,6 +46,20 @@ mrproper:
 		echo $${CMD}; \
 		$${CMD}; \
 	done
+
+install: $(SYS_LIBDIR)/$(LIBNAME).so $(SYS_LIBDIR)/$(LIBNAME).a $(SYS_INCDIR)/httpd.h
+
+#--------#
+
+$(SYS_LIBDIR)/$(LIBNAME).%: $(SYS_LIBDIR)/$(LIBNAME).%.$(LIB_VER)
+	ln -fs $(shell basename $^) $@
+
+.PRECIOUS: $(SYS_LIBDIR)/$(LIBNAME).%.$(LIB_VER)
+$(SYS_LIBDIR)/$(LIBNAME).%.$(LIB_VER): $(LIBDIR)/$(LIBNAME).%.$(LIB_VER)
+	install -g root -o root -DT -m 755 $^ $@
+
+$(SYS_INCDIR)/httpd.h: httpd.h
+	install -g root -o root -DT -m 644 $^ $@
 
 #--------#
 
