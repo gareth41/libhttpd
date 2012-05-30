@@ -58,6 +58,32 @@ hte add_header(struct http_data *data, unsigned char *field_name, unsigned char 
 
 /* ########################################################################## */
 
+unsigned char asc2bin(unsigned char c) {
+	switch (c) {
+		case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': return c - '0';
+		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': return c - 'a' + 0x0A;
+		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': return c - 'A' + 0x0A;
+	}
+	return 0;
+}
+
+void http_uri_decode(unsigned char *uri) {
+	int i, o;
+	o = 0;
+	for (i = 0; uri[i+o] != '\0'; i++) {
+		if (uri[i+o] != '%') {
+			if (o > 0) uri[i] = uri[i+o];
+			continue;
+		}
+		uri[i]  = (asc2bin(uri[i+o+1]) << 4) & 0xF0;
+		uri[i] |= (asc2bin(uri[i+o+2])     ) & 0x0F;
+		o += 2;
+		}
+	uri[i] = '\0';
+}
+
+/* ########################################################################## */
+
 /* BE AWARE! during the parse, until http_parse_fixup() is called, all pointers are held as indexes */
 hte http_read(struct session_info *session) {
 	hte ret = HTE_NONE;
@@ -144,6 +170,7 @@ hte http_parse(struct session_info *session) {
 				/* get the uri */
 				http_getField(sof1, &eof1, eod, ' ');
 				if (eof1 == NULL) { ret = HTE_PARSE; goto die; };
+				http_uri_decode(sof1);
 				req->uri = INDEXOF(sof1);
 				sof1 = eof1 + 2;
 				
