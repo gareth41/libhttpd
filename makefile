@@ -1,34 +1,34 @@
-CROSS_COMPILE=
+CROSS_COMPILE?=
 SYS_ROOT?=
 
 #--------#
 
-SRCS=$(wildcard *.c)
+GCC:=$(CROSS_COMPILE)gcc
+AR:=$(CROSS_COMPILE)ar
 
-LIBNAME=libhttpd
-SYS_LIBDIR=$(SYS_ROOT)/usr/lib
-SYS_INCDIR=$(SYS_ROOT)/usr/include
+SRCS:=$(wildcard *.c)
+LIBS:=pthread
 
-VER_MAJ=0
-VER_MIN=0
-VER_REV=1
-
-LIBS=pthread
-
-DEBUG=-g
-CFLAGS=-Wall -c -fPIC $(DEBUG) $(addprefix -D,$(OPTIONS)) -fvisibility=hidden -Wstrict-prototypes -Wno-variadic-macros
-CLINKS=-fPIC $(addprefix -l,$(LIBS)) $(DEBUG)
+DEBUG:=-g
+CFLAGS:=-Wall -c -fPIC $(DEBUG) $(addprefix -D,$(OPTIONS)) -fvisibility=hidden -Wstrict-prototypes -Wno-variadic-macros
+CLINKS:=-fPIC $(addprefix -l,$(LIBS)) $(DEBUG)
 
 #--------#
 
-LIBDIR=lib
-BUILDDIR=.build
+LIBNAME:=libhttpd
+VER_MAJ:=0
+VER_MIN:=0
+VER_REV:=1
 
-LIB_VER=$(VER_MAJ).$(VER_MIN).$(VER_REV)
-OBJS=$(addprefix $(BUILDDIR)/,$(patsubst %.c,%.o,$(SRCS)))
+LIB_VER:=$(VER_MAJ).$(VER_MIN).$(VER_REV)
 
-GCC=$(CROSS_COMPILE)gcc
-AR=$(CROSS_COMPILE)ar
+LIBDIR:=lib
+BUILDDIR:=.build
+
+SYS_LIBDIR:=$(SYS_ROOT)/usr/lib
+SYS_INCDIR:=$(SYS_ROOT)/usr/include
+
+OBJS:=$(addprefix $(BUILDDIR)/,$(patsubst %.c,%.o,$(SRCS)))
 
 #--------#
 
