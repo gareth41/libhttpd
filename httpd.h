@@ -20,6 +20,10 @@
 	along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stdarg.h>
 
 enum httpd_err {
@@ -66,5 +70,9 @@ hte httpd_nrespond(struct session_info *session, char *data, int len);
    this function will send any buffered headers to the client, and any existing buffered data
 	 after calling this function, data will not be buffered, it will be sent directly to the client */
 hte httpd_flush(struct session_info *session);
+
+#ifdef __cplusplus
+} /* extern "C" */
+#endif
 
 #endif /* __HTTPD_H */
