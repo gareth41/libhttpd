@@ -67,7 +67,7 @@ unsigned char asc2bin(unsigned char c) {
 	return 0;
 }
 
-void http_uri_decode(unsigned char *uri) {
+EXPORT void http_uri_decode(unsigned char *uri) {
 	int i, o;
 	o = 0;
 	for (i = 0; uri[i+o] != '\0'; i++) {
@@ -129,7 +129,7 @@ die:
 	return ret;
 }
 
-hte http_parse(struct session_info *session) {
+EXPORT hte http_parse(struct session_info *session) {
 	hte ret;
 	struct http_request *req;
 	unsigned char *sol,  *eol;  /* {start|end} of line */
@@ -257,7 +257,7 @@ die:
 	req->state = STATE_ERROR;
 	return ret;
 }
-hte http_parse_fixup(struct session_info *session) {
+EXPORT hte http_parse_fixup(struct session_info *session) {
 	struct http_request *req;
 	int i;
 	

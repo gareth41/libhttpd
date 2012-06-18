@@ -71,6 +71,21 @@ hte httpd_nrespond(struct session_info *session, char *data, int len);
 	 after calling this function, data will not be buffered, it will be sent directly to the client */
 hte httpd_flush(struct session_info *session);
 
+
+/* buffer functions that are available outside! */
+struct buf *buf_alloc(struct buf *_buf, size_t size);
+void buf_free(struct buf *buf);
+
+int bufcatf(struct buf **buf, char *format, ...);
+int vbufcatf(struct buf **buf, char *format, va_list ap);
+int nbufcatf(struct buf **buf, char *data, int len);
+
+
+/* http parsing functions that are available outside! */
+hte http_parse(struct session_info *session);
+hte http_parse_fixup(struct session_info *session);
+
+
 #ifdef __cplusplus
 } /* extern "C" */
 #endif

@@ -70,8 +70,6 @@ struct http_response {
 };
 
 hte http_read(struct session_info *session);
-hte http_parse(struct session_info *session);
-hte http_parse_fixup(struct session_info *session);
 hte http_respond(struct session_info *session, int generate_content_length);
 
 #endif /* HTTP_H */

@@ -28,7 +28,7 @@
 #include "internal.h"
 #include "buf.h"
 
-struct buf *buf_alloc(struct buf *_buf, size_t size) {
+EXPORT struct buf *buf_alloc(struct buf *_buf, size_t size) {
 	size_t tot_size;
 	struct buf *buf;
 	
@@ -56,12 +56,12 @@ struct buf *buf_alloc(struct buf *_buf, size_t size) {
 	return buf;
 }
 
-void buf_free(struct buf *buf) {
+EXPORT void buf_free(struct buf *buf) {
 	free(buf);
 }
 
 
-int bufcatf(struct buf **buf, char *format, ...) {
+EXPORT int bufcatf(struct buf **buf, char *format, ...) {
 	va_list ap;
 	int ret;
 	
@@ -71,7 +71,7 @@ int bufcatf(struct buf **buf, char *format, ...) {
 	
 	return ret;
 }
-int vbufcatf(struct buf **buf, char *format, va_list ap) {
+EXPORT int vbufcatf(struct buf **buf, char *format, va_list ap) {
 	int l, l1, l2;
 	va_list ap2;
 	
@@ -113,7 +113,7 @@ int vbufcatf(struct buf **buf, char *format, va_list ap) {
 	
 	return l2;
 }
-int nbufcatf(struct buf **buf, char *data, int len) {
+EXPORT int nbufcatf(struct buf **buf, char *data, int len) {
 	if (!buf || !data) return -1;
 	if (len <= 0) return 0;
 	
