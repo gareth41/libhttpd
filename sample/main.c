@@ -21,6 +21,7 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <string.h>
+#include <ctype.h>
 
 #include <httpd.h>
 
@@ -88,6 +89,30 @@ char content_favicon[] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF
 };
 
+int page_post(int rxid, struct session_info *session, char *content, int contentLength) {
+	httpd_addHeader(session, "Content-Type", "text/plain");
+	if (contentLength <= 0) {
+		httpd_respond(session, "You didn't POST :(");
+	} else {
+		int i;
+
+		printf("Someone POSTed!\n");
+		for (i = 0; i < contentLength; i++) {
+			printf(" %3d: 0x%02X ", i, content[i]);
+			if (isprint(content[i])) {
+				printf("'%c'", content[i]);
+			} else {
+				printf(" . ");
+			}
+			printf("\n");
+		}
+
+		httpd_respond(session, "Thanks!");
+	}
+
+	return 0;
+}
+
 #include "smile.c"
 
 /* ########################################################################## */
@@ -106,6 +131,7 @@ struct page {
 	
 } pageList[] = {
 	{ "/",            page_index },
+	{ "/post",        page_post  },
 	{ css_file,       page_css   },
 	{ test_file,      page_test  },
 	{ img_file,       NULL, content_smile,   sizeof(content_smile),   "image/gif"},
