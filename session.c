@@ -59,7 +59,7 @@ void *session_handleConnection(void *_session) {
 	session->xfer.response->httpReason = (unsigned char*)"Success";
 	
 	/* run the callback */
-	if (httpd->callback(httpd->rxid++, session, (char*)session->xfer.request->buf->data, session->xfer.request->buf->len) != 0) { ret = HTE_CALLBACK; goto die; }
+	if (httpd->callback(httpd->rxid++, session, (char*)session->xfer.request->data.content, session->xfer.request->data.contentLength) != 0) { ret = HTE_CALLBACK; goto die; }
 	
 	/* send the response */
 	if (http_respond(session, 1) != 0) { ret = HTE_RESPOND; goto die; }
