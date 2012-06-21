@@ -89,6 +89,7 @@ hte http_read(struct session_info *session) {
 	hte ret = HTE_NONE;
 	struct http_request *req;
 	ssize_t rxLen;
+	void *p;
 	
 	if (!session || !session->xfer.request) return HTE_INVALPARAM;
 	req = session->xfer.request;
@@ -99,7 +100,6 @@ hte http_read(struct session_info *session) {
 		if (req->buf == NULL) {
 			if ((req->buf = buf_alloc(NULL, HTTP_BLOCK_SIZE)) == NULL) return HTE_NOMEM;
 		} else {
-			void *p;
 			if ((p = buf_alloc(req->buf, req->buf->next + HTTP_BLOCK_SIZE)) == NULL) {
 				buf_free(req->buf);
 				return HTE_NOMEM;
@@ -121,6 +121,12 @@ hte http_read(struct session_info *session) {
 	}
 	
 	if (req->state != STATE_COMPLETE) { ret = HTE_PARSE; goto die; }
+	
+	if ((p = buf_alloc(req->buf, req->buf->next)) != NULL) {
+		req->buf = p;
+	} else {
+		req->buf->len = req->buf->next;
+	}
 	
 	if ((ret = http_parse_fixup(session)) != HTE_NONE) goto die;
 	
