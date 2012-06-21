@@ -239,6 +239,11 @@ EXPORT hte http_parse(struct session_info *session) {
 			case STATE_COMPLETE:
 				break;
 				
+			case STATE_ERROR:
+				fprintf(stderr, "%s:%d %s(): for some reason the parser is in an error state...\n", __FILE__, __LINE__, __FUNCTION__);
+				ret = HTE_PARSE;
+				goto die;
+				
 			default:
 				fprintf(stderr, "%s:%d %s(): unknown state: %d\n", __FILE__, __LINE__, __FUNCTION__, req->state);
 				ret = HTE_PARSE;
