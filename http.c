@@ -148,18 +148,32 @@ EXPORT hte http_parse(struct session_info *session) {
 	
 #define INDEXOF(a) (void*)((a) - sod)
 	sod = req->buf->data;
-	sol = &(req->buf->data[req->parsePos]);
 	eod = &(req->buf->data[req->buf->next - 1]);
 	
 	ret = HTE_NONE;
 	
-	while (sol <= eod && req->state != STATE_COMPLETE) {
+	while (req->parsePos < req->buf->next - 1 && req->state != STATE_COMPLETE) {
+		sol = &(req->buf->data[req->parsePos]);
 		
 		if (req->state == STATE_START ||
 		    req->state == STATE_PARSING_HEADERS) {
+			unsigned char *t;
 			/* suck in a line --> sol <==> eol */
 			for (eol = sol; *eol != '\r' && *eol != '\n' && eol <= eod; eol++);
-			if (*eol != '\r' && *eol != '\n') { break; }
+			
+			/* ran out of data... */
+			if (eol >= eod) break;
+			if (*eol != '\r' && *eol != '\n') break;
+
+			/* find the start of the next line (remember, '\r' '\r\n' '\n')
+			   we have to assume the client is ONLY USING ONE */
+			t = eol + 1;
+			if (t[-1] == '\r') {
+				if (t[0] == '\n') t++;
+			} else if (t[-1] == '\n') {
+				if (t[0] == '\r') t++;
+			}
+			req->parsePos = t - req->buf->data;
 			*eol = '\0';
 		}
 		
@@ -232,7 +246,8 @@ EXPORT hte http_parse(struct session_info *session) {
 					req->parsePos = eod - req->buf->data;
 				}
 				
-				if (req->data.contentReceived >= req->data.contentLength) req->state = STATE_COMPLETE;
+				if (req->data.contentReceived > req->data.contentLength) req->data.contentReceived = req->data.contentLength;
+				if (req->data.contentReceived == req->data.contentLength) req->state = STATE_COMPLETE;
 				
 				break;
 				
@@ -251,15 +266,7 @@ EXPORT hte http_parse(struct session_info *session) {
 		}
 		if (req->state == STATE_ERROR ||
 		    req->state == STATE_PARSING_CONTENT ||
-				req->state == STATE_COMPLETE) break;
-		
-		/* move to next line */
-		sol = eol + 1;
-		sol++;
-		/* only skip 2 if we are using '\r\n' line endings */
-		if (sol[-1] == '\r' && *sol == '\n') sol++;
-		
-		req->parsePos = sol - req->buf->data;
+		    req->state == STATE_COMPLETE) break;
 	}
 #undef INDEXOF
 	
