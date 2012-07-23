@@ -36,6 +36,7 @@ EXPORT hte httpd_startServer(struct httpd_info **_httpd, int listenPort, httpd_c
 	if (!callback || !_httpd) return HTE_INVALPARAM;
 	
 	if ((httpd = malloc(sizeof(*httpd))) == NULL) return HTE_NOMEM;
+	memset(httpd, 0, sizeof(*httpd));
 	
 	httpd->listenPort = listenPort;
 	httpd->callback = callback;
