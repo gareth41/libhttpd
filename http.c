@@ -81,6 +81,26 @@ EXPORT void http_uri_decode(unsigned char *uri) {
 		}
 	uri[i] = '\0';
 }
+EXPORT void http_uri_decode2(unsigned char *uri) {
+	int i, o;
+	char t;
+	o = 0;
+	for (i = 0; uri[i+o] != '\0'; i++) {
+		if (uri[i+o] != '%') {
+			if (o > 0) uri[i] = uri[i+o];
+			continue;
+		}
+		t  = (asc2bin(uri[i+o+1]) << 4) & 0xF0;
+		t |= (asc2bin(uri[i+o+2])     ) & 0x0F;
+		if (t == 0x2F) { /* skip '/' */
+			i += 2;
+			continue;
+		}
+		uri[i] = t;
+		o += 2;
+	}
+	uri[i] = '\0';
+}
 
 /* ########################################################################## */
 
@@ -190,7 +210,7 @@ EXPORT hte http_parse(struct session_info *session) {
 				/* get the uri */
 				http_getField(sof1, &eof1, eod, ' ');
 				if (eof1 == NULL) { ret = HTE_PARSE; goto die; };
-				http_uri_decode(sof1);
+				http_uri_decode2(sof1);
 				req->uri = INDEXOF(sof1);
 				sof1 = eof1 + 2;
 				

@@ -85,6 +85,9 @@ int nbufcatf(struct buf **buf, char *data, int len);
 hte http_parse(struct session_info *session);
 hte http_parse_fixup(struct session_info *session);
 
+void http_uri_decode(unsigned char *uri); /* decodes all escape sequences (%20) */
+void http_uri_decode2(unsigned char *uri); /* decodes all escape sequences, apart from %2F - '/' to maintain filenames
+                                              this is automatically called on request strings */
 
 #ifdef __cplusplus
 } /* extern "C" */
