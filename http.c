@@ -64,39 +64,48 @@ unsigned char asc2bin(unsigned char c) {
 		case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': return c - 'a' + 0x0A;
 		case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': return c - 'A' + 0x0A;
 	}
-	return 0;
+	return 0xFF;
 }
 
 EXPORT void http_uri_decode(unsigned char *uri) {
 	int i, o;
+	unsigned char t;
 	o = 0;
 	for (i = 0; uri[i+o] != '\0'; i++) {
 		if (uri[i+o] != '%') {
 			if (o > 0) uri[i] = uri[i+o];
 			continue;
 		}
-		uri[i]  = (asc2bin(uri[i+o+1]) << 4) & 0xF0;
-		uri[i] |= (asc2bin(uri[i+o+2])     ) & 0x0F;
+		if (uri[i+o+1] == '\0' || uri[i+o+2] == '\0') break;
+		if ((t = asc2bin(uri[i+o+1])) == 0xFF) continue;
+		uri[i]  = (t << 4) & 0xF0;
+		if ((t = asc2bin(uri[i+o+2])) == 0xFF) continue;
+		uri[i] |= (t     ) & 0x0F;
 		o += 2;
-		}
+	}
 	uri[i] = '\0';
 }
 EXPORT void http_uri_decode2(unsigned char *uri) {
 	int i, o;
-	char t;
+	unsigned char t, p;
 	o = 0;
 	for (i = 0; uri[i+o] != '\0'; i++) {
 		if (uri[i+o] != '%') {
 			if (o > 0) uri[i] = uri[i+o];
 			continue;
 		}
-		t  = (asc2bin(uri[i+o+1]) << 4) & 0xF0;
-		t |= (asc2bin(uri[i+o+2])     ) & 0x0F;
-		if (t == 0x2F) { /* skip '/' */
+		if (uri[i+o+1] == '\0' || uri[i+o+2] == '\0') break;
+		if ((t = asc2bin(uri[i+o+1])) == 0xFF) continue;
+		p  = (t << 4) & 0xF0;
+		if ((t = asc2bin(uri[i+o+2])) == 0xFF) continue;
+		p |= (t     ) & 0x0F;
+		if (p == 0x2F) { /* skip '/' */
+			int q;
+			for (q = 0; q <= o; q++) uri[i+q] = uri[i+o+q];
 			i += 2;
 			continue;
 		}
-		uri[i] = t;
+		uri[i] = p;
 		o += 2;
 	}
 	uri[i] = '\0';
